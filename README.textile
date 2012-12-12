@@ -179,8 +179,12 @@ its owner, and when the brand changes from owner, you want to update a certain f
  * notify_many(observable, observers)
  * conditions_many(observable, observers)
 
- the observers parameters is not-yet loaded collection association. Check your ORM's documentation to know what you can
+ the observers parameters is a container of not-yet loaded collection associations. Check your ORM's documentation to know what you can
  do with it and whether you can achieve your result without populating it (there is such a use under the examples).
+
+Purpose of the Notifier is to abstract the behaviour from the Observer relationship between associations. But if you still
+need to complement/overwrite behaviour from your observer/observable models, you can write it in notifier-specific modules,
+the ObserverMethods and the ObservableMethods, which will be included in the respective models.
 
 .h3 TODOs
 
