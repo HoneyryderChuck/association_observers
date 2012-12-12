@@ -9,3 +9,4 @@ rvm:
   - 1.9.3
   - jruby
   - rbx
+script: bundle exec rspec spec
