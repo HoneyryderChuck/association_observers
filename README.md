@@ -4,6 +4,9 @@ This is an alternative implementation of the observer pattern. As you may know, 
 implementation of it. This implementation is a variation of the pattern, so it is not supposed to supersede the existing
 implementations, but "complete" them for the specific use-cases addressed.
 
+[![Build Status](https://travis-ci.org/TiagoCardoso1983/association_observers.png?branch=master)](https://travis-ci.org/TiagoCardoso1983/association_observers)
+
+
 ## Comparison with the Observer Pattern
 
 The Observer Pattern clearly defines two roles: the observer and the observed. The observer registers itself by the
