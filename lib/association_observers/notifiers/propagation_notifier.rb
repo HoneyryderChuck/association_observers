@@ -10,7 +10,7 @@ class PropagationNotifier < Notifier::Base
   # propagates the message to the observer's observer if the
   # observer is indeed observed by any entity
   def action(observable, observer, callback=@callback)
-    observer.new_record? or not observer.respond_to?(:delay) ? observer.send(:notify_observers, callback) : observer.delay.notify_observers(callback)
+    (observer.new_record? or not observer.respond_to?(:delay)) ? observer.send(:notify_observers, callback) : observer.delay.notify_observers(callback)
   end
 
 end

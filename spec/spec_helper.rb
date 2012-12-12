@@ -10,17 +10,6 @@ ActiveRecord::Base.establish_connection("activerecord")
 
 require 'rspec'
 require 'database_cleaner'
-require 'webmock'
-require 'delayed_job'
-require 'delayed_job_active_record'
-
-class Delayed::Backend::ActiveRecord::Job
- after_create do |job|
-   job = self.class.find(job.id) # make db roundtrip
-   job.invoke_job
-   job.destroy
- end
-end
 
 RSpec.configure do |config|
 
