@@ -26,27 +26,28 @@ module Notifier
     end
 
     # @return [Boolean] whether the action should be executed for the observer
-    def conditions(observer) ; true ; end
+    def conditions(observable, observer) ; true ; end
     # @return [Boolean] whether the action should be executed for the observers collection
-    def conditions_many(observers) ; true ; end
+    def conditions_many(observable, observers) ; true ; end
 
     # abstract action; has to be implemented by the subclass
     def action(observable, observer, callback=@callback)
       raise "this has to be implemented in your notifier"
     end
 
-    # Notifies all observers; filters the observers into two groups: one-to-many and one-to-one collections
-    # @param [Object] observable the object which is notifying
-    # @param [Array] observers the associated observers which will be notified
-    def notify(observable, observers, &block)
-      many, ones = observers.partition{|obs| obs.respond_to?(:size) }
-      action = block_given? ? block : method(:action)
-      notify_many(observable, many, &action)
-      notify_ones(observable, ones, &action)
-    end
+
 
     private
 
+    # Notifies all observers; filters the observers into two groups: one-to-many and one-to-one collections
+      # @param [Object] observable the object which is notifying
+      # @param [Array] observers the associated observers which will be notified
+      def notify(observable, observers, &block)
+        many, ones = observers.partition{|obs| obs.respond_to?(:size) }
+        action = block_given? ? block : method(:action)
+        notify_many(observable, many, &action)
+        notify_ones(observable, ones, &action)
+      end
 
     # Abstract Method (can be re-defined by other notifiers); here it is defined the default implementation of
     # handling of many-to-many observers: for each one it will notify its observers, in case these are observed
@@ -55,8 +56,8 @@ module Notifier
     def notify_many(observable, many_observers)
       many_observers.each do |observers|
         observers.find_each(:batch_size => 10) do |observer|
-          yield(observable, observer) if conditions(observer)
-        end if conditions_many(observers)
+          yield(observable, observer) if conditions(observable, observer)
+        end if conditions_many(observable, observers)
       end
     end
 
@@ -66,7 +67,7 @@ module Notifier
     # @param [Array[Object]] observers the observers which will be notified; each element represents a one-to-one association
     def notify_ones(observable, observers)
       observers.each do |observer|
-        yield(observable, observer) if conditions(observer)
+        yield(observable, observer) if conditions(observable, observer)
       end
     end
   end

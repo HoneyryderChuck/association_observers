@@ -4,8 +4,8 @@
 # @author Tiago Cardoso
 class PropagationNotifier < Notifier::Base
 
-  def conditions(observer) ; observer.observable? ; end
-  def conditions_many(observers) ;  observers.klass.observable? ; end
+  def conditions(observable, observer) ; observer.observable? ; end
+  def conditions_many(observable, observers) ;  observers.klass.observable? ; end
 
   # propagates the message to the observer's observer if the
   # observer is indeed observed by any entity

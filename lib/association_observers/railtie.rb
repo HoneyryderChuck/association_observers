@@ -6,8 +6,11 @@ module AssociationObservers
     end
   end
   class Railtie < Rails::Railtie
-    initializer 'default_value_for.insert_into_active_record' do
+    initializer 'association_observers.insert_into_active_record' do
       AssociationObservers.initialize_railtie
+    end
+    initializer 'association_observers.autoload', :before => :set_autoload_paths do |app|
+      app.config.autoload_paths += Rails.root.join("app", "notifiers")
     end
   end
 end

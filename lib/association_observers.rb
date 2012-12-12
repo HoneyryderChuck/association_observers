@@ -86,7 +86,7 @@ module AssociationObservers
       plural_associations = args.select{ |arg| self.reflections[arg].collection? }
 
       association_name = (opts[:as] || self.name.demodulize.underscore).to_s
-      notifier_classes = Array(opts[:notifiers]).map{|notifier| notifier.to_s.end_with?("_notifier") ? notifier : "#{notifier}_notifier".to_s }
+      notifier_classes = Array(opts[:notifiers] || opts[:notifier]).map{|notifier| notifier.to_s.end_with?("_notifier") ? notifier : "#{notifier}_notifier".to_s }
       observer_callbacks = Array(opts[:on] || [:save, :destroy])
 
       # no observer, how are you supposed to observe?
@@ -112,10 +112,11 @@ module AssociationObservers
           observer_association_name = (options[:as] || association_name).to_s
           notifier_classes.each do |notifier_class|
             observer_callbacks.each do |callback|
-              options= {}
+              options = {}
               observer_association = self.reflect_on_association(observer_association_name.to_sym) ||
                                      self.reflect_on_association(observer_association_name.pluralize.to_sym)
               options[:observer_class] = observer_class.base_class if observer_association.options[:polymorphic]
+
               self.add_observer notifier_class.new(callback, observer_association.name, options)
               include "#{notifier_class.name}::ObservableMethods".constantize if notifier_class.constants.include?(:ObservableMethods)
             end
