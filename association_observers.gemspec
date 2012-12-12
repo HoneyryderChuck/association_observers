@@ -7,7 +7,7 @@ Gem::Specification.new do |gem|
   gem.name          = "association_observers"
   gem.version       = AssociationObservers::VERSION
   gem.authors       = ["Tiago Cardoso"]
-  gem.email         = ["tiago@restorm.com"]
+  gem.email         = ["cardoso_tiago@hotmail.com"]
   gem.description   = %q{This is an alternative implementation of the observer pattern. As you may know, Ruby (and Rails/ActiveRecord) already have an
   implementation of it. This implementation is a variation of the pattern, so it is not supposed to supersede the existing
   implementations, but "complete" them for the specific use-cases addressed.}
