@@ -2,8 +2,7 @@
 module AssociationObservers
   def self.initialize_railtie
     ActiveSupport.on_load :active_record do
-      ActiveRecord::Base.send(:extend, AssociationObservers::ClassMethods)
-      ActiveRecord::Base.send(:include, AssociationObservers::InstanceMethods)
+      require 'association_observers/activerecord'
     end
   end
   class Railtie < Rails::Railtie

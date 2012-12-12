@@ -183,6 +183,5 @@ end
 if defined?(Rails::Railtie) # RAILS
   require 'association_observers/railtie'
 else
-  ActiveRecord::Base.send(:extend, AssociationObservers::ClassMethods)
-  ActiveRecord::Base.send(:include, AssociationObservers::InstanceMethods)
+  require 'association_observers/activerecord'
 end
