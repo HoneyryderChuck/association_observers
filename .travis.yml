@@ -12,3 +12,4 @@ rvm:
 script: bundle exec rspec spec
 before_script:
   - mysql -e 'create database association_observers;'
+  - jruby -r openssl -S bundle install
