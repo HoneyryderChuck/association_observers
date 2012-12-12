@@ -3,6 +3,8 @@ require "association_observers/version"
 require "association_observers/notifiers/base"
 require "association_observers/notifiers/propagation_notifier"
 
+require "association_observers/ruby18" if RUBY_VERSION < "1.9"
+
 # Here it is defined the basic behaviour of how observer/observable model associations are set. There are here three
 # main roles defined: The observer associations, the observable associations, and the notifiers (the real observers).
 # Observer Associations: those are the associations of an observable which will be "listening/observing" to updates
@@ -99,7 +101,7 @@ module AssociationObservers
 
       # observer association methods per observer
       notifier_classes.each do |notifier_class|
-        include "#{notifier_class.name}::ObserverMethods".constantize if notifier_class.constants.include?(:ObserverMethods)
+        include "#{notifier_class.name}::ObserverMethods".constantize if notifier_class.constants.map(&:to_sym).include?(:ObserverMethods)
       end
 
       # 1: for each observed association, define behaviour
@@ -118,7 +120,7 @@ module AssociationObservers
               options[:observer_class] = observer_class.base_class if observer_association.options[:polymorphic]
 
               self.add_observer notifier_class.new(callback, observer_association.name, options)
-              include "#{notifier_class.name}::ObservableMethods".constantize if notifier_class.constants.include?(:ObservableMethods)
+              include "#{notifier_class.name}::ObservableMethods".constantize if notifier_class.constants.map(&:to_sym).include?(:ObservableMethods)
             end
           end
 
@@ -172,8 +174,17 @@ module AssociationObservers
         callbacks.each do |callback, procs|
           callbacks[callback] += Array(a.options[callback])
         end
+
+        if RUBY_VERSION < "1.9"
+          assoc_options = AssociationObservers::extended_to_s(a.options)
+          callback_options = AssociationObservers::extended_to_s(callbacks)
+        else
+          assoc_options = a.options.to_s
+          callback_options = callbacks
+        end
+
         class_eval <<-END
-          #{a.macro} :#{assoc}, #{a.options.to_s}.merge(#{callbacks})
+          #{a.macro} :#{assoc}, #{assoc_options}.merge(#{callback_options})
         END
       end
 

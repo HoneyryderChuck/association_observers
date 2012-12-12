@@ -42,7 +42,6 @@ end
 class TellKidHesFatNotifier < Notifier::Base
 
   module ObservableMethods
-
     def cry!
       LOGGER.info(":'(")
     end
