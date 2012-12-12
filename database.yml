@@ -1,8 +1,5 @@
 activerecord:
-  reconnect: true
   adapter: mysql2
   encoding: utf8
-  username: developer
-  password:
-  host: 127.0.0.1
+  username: root
   database: association_observers
