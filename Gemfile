@@ -6,7 +6,6 @@ group :development do
 end
 
 gem 'activerecord'
-gem 'sqlite3'
 
 platforms :ruby do
   gem RUBY_VERSION > "1.8.7" ? 'debugger' : 'ruby-debug'
