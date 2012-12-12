@@ -8,7 +8,6 @@ end
 gem 'activerecord'
 
 platforms :ruby do
-  gem (RUBY_VERSION > "1.8.7" ? 'debugger' : 'ruby-debug') unless RUBINIUS_VERSION
   gem 'mysql2'
 end
 
