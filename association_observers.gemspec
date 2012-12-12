@@ -8,9 +8,16 @@ Gem::Specification.new do |gem|
   gem.version       = AssociationObservers::VERSION
   gem.authors       = ["Tiago Cardoso"]
   gem.email         = ["tiago@restorm.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
-  gem.homepage      = ""
+  gem.description   = %q{This is an alternative implementation of the observer pattern. As you may know, Ruby (and Rails/ActiveRecord) already have an
+  implementation of it. This implementation is a variation of the pattern, so it is not supposed to supersede the existing
+  implementations, but "complete" them for the specific use-cases addressed.}
+  gem.summary       = %q{The Observer Pattern clearly defines two roles: the observer and the observed. The observer registers itself by the
+  observed. The observed decides when (for which "actions") to notify the observer. The observer knows what to do when notified.
+
+  What's the limitation? The observed has to know when and whom to notify. The observer has to know what to do. For this
+  logic to be implemented for two other separate entities, behaviour has to be copied from one place to the other. So, why
+  not delegate this information (to whom, when, behaviour) to a third role, the notifier?}
+  gem.homepage      = "https://github.com/TiagoCardoso1983/association_observers"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
