@@ -21,4 +21,4 @@ rescue LoadError => err
 end
 
 
-require "./lib/asssociation_observers"
+require "./lib/association_observers.rb"
