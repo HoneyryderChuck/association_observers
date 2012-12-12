@@ -40,14 +40,17 @@ module Notifier
     private
 
     # Notifies all observers; filters the observers into two groups: one-to-many and one-to-one collections
-      # @param [Object] observable the object which is notifying
-      # @param [Array] observers the associated observers which will be notified
-      def notify(observable, observers, &block)
-        many, ones = observers.partition{|obs| obs.respond_to?(:size) }
-        action = block_given? ? block : method(:action)
-        notify_many(observable, many, &action)
-        notify_ones(observable, ones, &action)
-      end
+    # @param [Object] observable the object which is notifying
+    # @param [Array] observers the associated observers which will be notified
+    def notify(observable, observers, &block)
+      many, ones = observers.partition{|obs| obs.respond_to?(:size) }
+      action = block_given? ? block : method(:action)
+      notify_many(observable, many, &action)
+      notify_ones(observable, ones, &action)
+    end
+
+    # TODO: make this notify private as soon as possible again
+    public :notify
 
     # Abstract Method (can be re-defined by other notifiers); here it is defined the default implementation of
     # handling of many-to-many observers: for each one it will notify its observers, in case these are observed
