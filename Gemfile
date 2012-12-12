@@ -6,3 +6,15 @@ gemspec
 group :development do
   gem "yard",       "0.8.2.1", :require => false
 end
+
+
+platforms :ruby do
+  gem 'sqlite3'
+  gem 'mysql2'
+  gem 'activerecord'
+end
+
+platforms :jruby do
+  gem 'jruby-openssl'
+  gem 'activerecord-jdbcsqlite3-adapter'
+end

@@ -22,10 +22,8 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency("rspec",["~> 2.11.0"])
   gem.add_development_dependency("database_cleaner",["=0.8.0"])
   gem.add_development_dependency("debugger")
-  gem.add_development_dependency("mysql2", ["=0.3.11"])
   gem.add_development_dependency("colorize",["=0.5.8"])
   gem.add_development_dependency("pry")
   gem.add_development_dependency("pry-doc")
   gem.add_development_dependency("awesome_print")
-  gem.add_development_dependency("activerecord", ["~> 3.2.8"])
 end
