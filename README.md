@@ -1,10 +1,10 @@
-.h1 AssociationObservers
+# AssociationObservers
 
 This is an alternative implementation of the observer pattern. As you may know, Ruby (and Rails/ActiveRecord) already have an
 implementation of it. This implementation is a variation of the pattern, so it is not supposed to supersede the existing
 implementations, but "complete" them for the specific use-cases addressed.
 
-.h2 Comparison with the Observer Pattern
+## Comparison with the Observer Pattern
 
 The Observer Pattern clearly defines two roles: the observer and the observed. The observer registers itself by the
 observed. The observed decides when (for which "actions") to notify the observer. The observer knows what to do when notified.
@@ -13,18 +13,18 @@ What's the limitation? The observed has to know when and whom to notify. The obs
 logic to be implemented for two other separate entities, behaviour has to be copied from one place to the other. So, why
 not delegate this information (to whom, when, behaviour) to a third role, the notifier?
 
-.h2 Comparison with Ruby Observable library
+## Comparison with Ruby Observable library
 
 Great library, which works great for POROs, but not for models (specifically ActiveRecord, which overwrites a lot of its
 functionality)
 
-.h2 Comparison with ActiveRecord Observers
+## Comparison with ActiveRecord Observers
 
 Observers there are external entities which observe models. They don't exactly work as links between two models, just
 extract functionality (callbacks) which would otherwise flood the model. For that, they're great. For the rest, not really.
 
 
-.h3 Installation
+### Installation
 
 Add this line to your application's Gemfile:
 
@@ -38,11 +38,10 @@ Or install it yourself as:
 
     $ gem install association_observers
 
-.h3 Usage
+### Usage
 
 Here is a functional example:
 
- <pre>
    require 'logger'
 
    LOGGER = Logger.new(STDOUT)
@@ -151,7 +150,6 @@ Here is a functional example:
      observes :cakes, :on => :destroy, :notifier => :bust_kids_ass
      observes :kid, :on => :update, :notifier => :tell_kid_hes_fat
    end
- </pre>
 
 You can find this under the examples.
 
@@ -186,7 +184,7 @@ Purpose of the Notifier is to abstract the behaviour from the Observer relations
 need to complement/overwrite behaviour from your observer/observable models, you can write it in notifier-specific modules,
 the ObserverMethods and the ObservableMethods, which will be included in the respective models.
 
-.h3 TODOs
+### TODOs
 
 * Support for other ORM's (currently only supporting ActiveRecord)
 * Support for other Message Queue libraries (only supporting DelayedJob, rescue, everything that "#delay"s)
@@ -194,17 +192,17 @@ the ObserverMethods and the ObservableMethods, which will be included in the res
 * Observe method calls (currently only observing model callbacks)
 * Overall spec readability
 
-.h3 Rails
+### Rails
 
 The observer models have to be eager-loaded for the observer/observable behaviour to be extended in the respective associations.
 It is kind of a drag, but a drag the Rails Observers already suffer from (these have to be declared in the application configuration).
 
-.h3 Non-Rails
+### Non-Rails
 
 If you are auto-loading your models, the same logic from the paragraph above applies. If you are requiring your models,
  just proceed, this is not your concern :)
 
-.h3 Contributing
+### Contributing
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
