@@ -32,4 +32,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency("pry")
   gem.add_development_dependency("pry-doc")
   gem.add_development_dependency("awesome_print")
+
+  gem.add_dependency("activesupport")
 end
