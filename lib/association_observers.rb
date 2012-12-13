@@ -50,6 +50,37 @@ module AssociationObservers
 
     module ClassMethods
       def observable? ; true ; end
+
+      private
+
+      def set_observers(notifiers, callbacks, observer_class, association_name)
+        notifiers.each do |notifier|
+          callbacks.each do |callback|
+            options = {}
+            observer_association = self.reflect_on_association(association_name.to_sym) ||
+                                   self.reflect_on_association(association_name.pluralize.to_sym)
+            options[:observer_class] = observer_class.base_class if observer_association.options[:polymorphic]
+
+            self.add_observer notifier.new(callback, observer_association.name, options)
+            include "#{notifier.name}::ObservableMethods".constantize if notifier.constants.map(&:to_sym).include?(:ObservableMethods)
+          end
+        end
+      end
+
+      def set_notification_on_callbacks(callbacks)
+        callbacks.each do |callback|
+          if [:create, :update].include?(callback)
+            real_callback = :save
+            callback_opts = {:on => callback}
+          else
+            real_callback = callback
+            callback_opts = {}
+          end
+            send("after_#{real_callback}", callback_opts) do
+              notify! callback
+            end
+          end
+      end
     end
 
     def unobservable! ; @unobservable = true ; end
@@ -109,38 +140,14 @@ module AssociationObservers
         klass.instance_eval do
 
           include ActiveModel::Observing
-
-          # load observers from this observable association
-          observer_association_name = (options[:as] || association_name).to_s
-          notifier_classes.each do |notifier_class|
-            observer_callbacks.each do |callback|
-              options = {}
-              observer_association = self.reflect_on_association(observer_association_name.to_sym) ||
-                                     self.reflect_on_association(observer_association_name.pluralize.to_sym)
-              options[:observer_class] = observer_class.base_class if observer_association.options[:polymorphic]
-
-              self.add_observer notifier_class.new(callback, observer_association.name, options)
-              include "#{notifier_class.name}::ObservableMethods".constantize if notifier_class.constants.map(&:to_sym).include?(:ObservableMethods)
-            end
-          end
-
-          # sets the callbacks to inform observers
-          observer_callbacks.each do |callback|
-            if [:create, :update].include?(callback)
-              real_callback = :save
-              callback_opts = {:on => callback}
-            else
-              real_callback = callback
-              callback_opts = {}
-            end
-            send("after_#{real_callback}", callback_opts) do
-              notify! callback
-            end
-          end
-
+          include IsObservableMethods
           attr_reader :unobservable
 
-          include IsObservableMethods
+          # load observers from this observable association
+          set_observers(notifier_classes, observer_callbacks, observer_class, (options[:as] || association_name).to_s)
+
+          # sets the callbacks to inform observers
+          set_notification_on_callbacks(observer_callbacks)
         end
 
       end
