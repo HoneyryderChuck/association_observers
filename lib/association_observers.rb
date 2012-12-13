@@ -148,13 +148,24 @@ module AssociationObservers
       # 2. for each collection association, insert after add and after remove callbacks
 
       # first step is defining the methods which will be called by the collection callbacks.
-      callback_procs = observer_callbacks.map do |callback|
-        notifier_classes.map do |notifier_class|
-          routine_name = :"__observer_#{callback}_callback_for_#{notifier_class.name.demodulize.underscore}__"
+      # second step is redefining the associations with the proper callbacks to be triggered
+      __redefine_collection_associations_with_collection_callbacks__(plural_associations, __define_collection_callback_routines__(observer_callbacks, notifier_classes))
+
+    end
+
+    # given a collection of callbacks, it defines a private routine for each of them; this subroutine will notify the observers
+    # which look on the callback the subroutine it is addressed to
+    # @param [Array] callbacks a collection of callbacks as understood by the observers (:create, :update, :update, :destroy)
+    # @param [Array] notifiers a collection of notifier classes
+    # @return [Array] a collection of callback/sob-routine pairs
+    def __define_collection_callback_routines__(callbacks, notifiers)
+      callbacks.map do |callback|
+        notifiers.map do |notifier|
+          routine_name = :"__observer_#{callback}_callback_for_#{notifier.name.demodulize.underscore}__"
           class_eval <<-END
             def #{routine_name}(element)
               callback = element.class.observer_instances.detect do |notifier|
-                notifier.class.name == '#{notifier_class}' and notifier.callback == :#{callback}
+                notifier.class.name == '#{notifier}' and notifier.callback == :#{callback}
               end
               callback.notify(element, [self]) unless callback.nil?
             end
@@ -163,18 +174,25 @@ module AssociationObservers
           [callback, routine_name]
         end
       end.flatten(1)
+    end
 
-      # second step is redefining the associations with the proper callbacks to be triggered
-      plural_associations.each do |assoc|
+    # given a set of collection associations and a collection of callback/method_name pairs, it redefines the association
+    # setting the respective callback routines for each of them
+    # @param [Array] associations a collection of plural association names
+    # @param [Hash, Array] callback_procs a collection of callback/method_name pairs
+    def __redefine_collection_associations_with_collection_callbacks__(associations, callback_procs)
+      associations.each do |assoc|
         a = self.reflect_on_association(assoc)
         callbacks = Hash[callback_procs.group_by{|code, proc| COLLECTION_CALLBACKS_MAPPER[code] }.reject{|k, v| k.nil? }.map{ |code, val| [:"after_#{code}", val.map(&:last)] }]
-        next if callbacks.empty?
+        next if callbacks.empty? # no callbacks, no need to redefine association
+
         # this snippet takes care that the array of callbacks which will get inserted in the association will not
         # overwrite whatever callbacks you may have already defined
-        callbacks.each do |callback, procs|
+        callbacks.each do |callback, procedures|
           callbacks[callback] += Array(a.options[callback])
         end
 
+        # bullshit ruby 1.8 can't stringify hashes, arrays, symbols nor strings correctly
         if RUBY_VERSION < "1.9"
           assoc_options = AssociationObservers::extended_to_s(a.options)
           callback_options = AssociationObservers::extended_to_s(callbacks)
@@ -187,7 +205,6 @@ module AssociationObservers
           #{a.macro} :#{assoc}, #{assoc_options}.merge(#{callback_options})
         END
       end
-
     end
   end
 end
