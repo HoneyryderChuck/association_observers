@@ -25,6 +25,14 @@ if defined?(DataMapper)
             end
           end
         end
+
+        def set_notification_on_callbacks(callbacks)
+          callbacks.each do |callback|
+            after callback do
+              notify! callback
+            end
+          end
+        end
       end
     end
 
@@ -39,7 +47,7 @@ if defined?(DataMapper)
         end
 
         def get_association_options_pairs(association_names)
-          relationships.map{|r| [r.parent_model_name.constantize, r.options] }
+          relationships.select{|r|association_names.include?(r.name)}.map{|r| [r.child_model_name.constantize, r.options] }
         end
 
         def filter_collection_associations(associations)

@@ -21,6 +21,21 @@ if defined?(ActiveRecord)
             end
           end
         end
+
+        def set_notification_on_callbacks(callbacks)
+          callbacks.each do |callback|
+            if [:create, :update].include?(callback)
+              real_callback = :save
+              callback_opts = {:on => callback}
+            else
+              real_callback = callback
+              callback_opts = {}
+            end
+            send("after_#{real_callback}", callback_opts) do
+              notify! callback
+            end
+          end
+        end
       end
     end
 
