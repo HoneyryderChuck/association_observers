@@ -82,10 +82,7 @@ describe AssociationObservers do
     has 1, :observer_test, :through => :has_many_observable_test
   end
 
-  #class PolymorphicHasManyObservableTest 
-  #  belongs_to :observer, :polymorphic => true
-  #end
-  class HabtmObservableTest 
+  class HabtmObservableTest
     include DataMapper::Resource
     property :id, Serial
     property :name, String
@@ -110,7 +107,6 @@ describe AssociationObservers do
 
     has n, :has_many_through_observable_tests, :through => :has_many_observable_tests, :via => :target, :required => false
 
-    #has n, :polymorphic_has_many_observable_tests, :as => :observer
 
     has 1, :observer_observer_test
 
@@ -121,7 +117,6 @@ describe AssociationObservers do
              :has_one_observable_test,
              :collection_observable_test,
              :has_many_through_observable_tests,
-             #:polymorphic_has_many_observable_tests,
              :has_many_observable_tests,
              :habtm_observable_tests, :notifiers => :test_update, :on => :update
     observes :belongs_to_observable_test,
@@ -129,7 +124,6 @@ describe AssociationObservers do
              :collection_observable_test,
              :has_many_through_observable_tests,
              :has_many_observable_tests,
-             #:polymorphic_has_many_observable_tests,
              :habtm_observable_tests, :notifiers => :test_destroy, :on => :destroy
     observes :belongs_to_observable_test, :notifiers => :test_update, :on => :bang
   end
@@ -158,7 +152,6 @@ describe AssociationObservers do
   let(:observer2) { ObserverTest.create }
   let(:belongs_to_observable) {BelongsToObservableTest.create(:observer_test => observer1)}
   let(:collection_observable) {CollectionObservableTest.create(:observer_tests => [observer1, observer2])}
-  #let(:polymorphic_observable) {PolymorphicHasManyObservableTest.create(:observer => observer2)}
   describe "observer_methods" do
     let(:observer) {ObserverObserverTest.new}
     it "should be available" do
@@ -195,7 +188,6 @@ describe AssociationObservers do
       observer1.should_not be_deleted
     end
   end
-  # TODO: currently failing spec; after_destroy not being triggered in rspec: investigate further
   pending "when the belongs to observable is deleted" do
     before(:each) do
       observer1.belongs_to_observable_test.destroy
@@ -244,34 +236,6 @@ describe AssociationObservers do
       end
     end
   end
-  #describe "when one of the polymorphic has many is updated" do
-  #  before(:each) do
-  #    observer1.polymorphic_has_many_observable_tests = [PolymorphicHasManyObservableTest.new,
-  #                                                       PolymorphicHasManyObservableTest.new,
-  #                                                       PolymorphicHasManyObservableTest.new]
-  #    observer1.update!(:updated, false)
-  #    observer1.reload
-  #  end
-  #  it "should update its observer" do
-  #    observer1.polymorphic_has_many_observable_tests.first.update(:name => "doof")
-  #    observer1.polymorphic_has_many_observable_tests.first.name.should == "doof"
-  #    observer1.reload.should be_updated
-  #    observer1.should_not be_deleted
-  #  end
-  #  describe "having another polymorphic observable of same type somewhere else" do
-  #    before(:each) do
-  #      observer2.update!(:updated, false)
-  #    end
-  #    it "should not update its observer" do
-  #      observer1.polymorphic_has_many_observable_tests.first.update(:name => "doof")
-  #      observer1.polymorphic_has_many_observable_tests.first.name.should == "doof"
-  #      observer1.reload.should be_updated
-  #      observer1.should_not be_deleted
-  #      observer2.reload.should_not be_updated
-  #      observer2.should_not be_deleted
-  #    end
-  #  end
-  #end
   describe "when the has many through has been updated" do
     before(:each) do
       observer1.has_many_observable_tests.first.has_many_through_observable_tests.create
@@ -284,74 +248,6 @@ describe AssociationObservers do
       observer1.should_not be_deleted
     end
   end
-  #describe "when an has and belongs to many association" do
-  #  describe "has been created" do
-  #    before(:each) do
-  #      observer1.update!(:updated => false)
-  #      observer1.habtm_observable_tests.create(:name => "doof")
-  #    end
-  #    it "should update its observer" do
-  #      observer1.habtm_observable_tests.first.name.should == "doof"
-  #      observer1.reload.should be_updated
-  #      observer1.should_not be_deleted
-  #    end
-  #    describe "and then updated" do
-  #      before(:each) do
-  #        observer1.update!(:updated => false)
-  #        observer1.habtm_observable_tests.first.update(:name => "superdoof")
-  #      end
-  #      it "should update its observer" do
-  #        observer1.habtm_observable_tests.first.name.should == "superdoof"
-  #        observer1.reload.should be_updated
-  #        observer1.should_not be_deleted
-  #      end
-  #    end
-  #    describe "and afterwards deleted" do
-  #      before(:each) do
-  #        observer1.update!(:deleted => false)
-  #        observer1.habtm_observable_tests.delete(observer1.habtm_observable_tests.first)
-  #      end
-  #      it "should update its observer" do
-  #        observer1.reload.should be_deleted
-  #      end
-  #    end
-  #    describe "and completely replaced" do
-  #      before(:each) do
-  #        observer1.update!(:updated => false)
-  #        observer1.update!(:deleted => false)
-  #        observer1.habtm_observable_tests = [HabtmObservableTest.new]
-  #      end
-  #      it "should update and delete the observer" do
-  #        observer1.reload.should be_updated
-  #        observer1.reload.should be_deleted
-  #      end
-  #    end
-  #
-  #  end
-  #  describe "has been linked from an existing assoc" do
-  #    before(:each) do
-  #      t = HabtmObservableTest.create(:name => "doof")
-  #      observer1.habtm_observable_tests << t
-  #      observer1.update!(:updated => false)
-  #      observer1.habtm_observable_tests.first.update(:name => "superdoof")
-  #    end
-  #    it "should update its observer" do
-  #      observer1.habtm_observable_tests.first.name.should == "superdoof"
-  #      observer1.reload.should be_updated
-  #      observer1.should_not be_deleted
-  #    end
-  #    describe "and afterwards deleted" do
-  #      before(:each) do
-  #        observer1.update!(:deleted => false)
-  #        observer1.habtm_observable_tests.delete(observer1.habtm_observable_tests.first)
-  #      end
-  #      it "should update its observer" do
-  #        observer1.reload.should be_deleted
-  #      end
-  #    end
-  #
-  #  end
-  #end
   describe "when the collection observable is updated" do
     before(:each) do
       collection_observable.update(:name => "doof")
@@ -400,21 +296,6 @@ describe AssociationObservers do
         observer_observer.reload.should be_updated
       end
     end
-    #describe "when one of the polymorphic has many is updated" do
-    #  before(:each) do
-    #    observer1.polymorphic_has_many_observable_tests = [PolymorphicHasManyObservableTest.new,
-    #                                                       PolymorphicHasManyObservableTest.new,
-    #                                                       PolymorphicHasManyObservableTest.new]
-    #    observer1.update!(:updated => false)
-    #    observer_observer.update!(:updated => false)
-    #  end
-    #  it "should update its observer" do
-    #    observer_observer.observer_test.polymorphic_has_many_observable_tests.first.update(:name => "doof")
-    #    observer_observer.observer_test.polymorphic_has_many_observable_tests.first.name.should == "doof"
-    #    observer1.reload.should be_updated
-    #    observer_observer.reload.should be_updated
-    #  end
-    #end
     describe "when the has many through has been updated" do
       before(:each) do
         observer1.has_many_observable_tests.first.has_many_through_observable_tests.create
@@ -440,65 +321,6 @@ describe AssociationObservers do
       end
     end
   end
-
-
-  #describe "when the association is polymorphic" do
-  #  class HasOnePolymorphicObservableTest 
-  #    storage_names[:default] = 'association_polymorphic_observable_tests'
-  #    belongs_to :observer, :polymorphic => true
-  #    attr_accessible :observer
-  #  end
-  #
-  #  class ObserverTest
-  #    has_one :has_one_polymorphic_observable_test, :as => :observer
-  #    attr_accessible :has_one_polymorphic_observable_test
-  #    observes :has_one_polymorphic_observable_test, :as => :observer, :notifiers => :test_update, :on => :update
-  #  end
-  #
-  #  class OtherPossibleObserverTest < ActiveRecord::Base # Why Active::Record? The association klass is the base class
-  #    storage_names[:default] = 'association_observer_tests'
-  #    attr_accessible :updated, :deleted
-  #    has_one :has_one_polymorphic_observable_test, :as => :observer
-  #    attr_accessible :has_one_polymorphic_observable_test
-  #    # does not define observables, therefore should not observe
-  #  end
-  #
-  #  ActiveRecord::Schema.define do
-  #    create_table :association_polymorphic_observable_tests, :force => true do |t|
-  #      t.column :observer_id, :integer
-  #      t.column :observer_type, :string
-  #      t.column :name, :string
-  #    end
-  #  end
-  #  let(:polymorphic_observable) { HasOnePolymorphicObservableTest.create(:observer => ObserverTest.new) }
-  #  let(:observer) {polymorphic_observable.observer}
-  #  before(:each) do
-  #    observer.update!(:updated => nil)
-  #  end
-  #  describe "when the has one association is updated" do
-  #    before(:each) do
-  #      polymorphic_observable.update(:name => "doof")
-  #    end
-  #    it "should update its observer" do
-  #      polymorphic_observable.name.should == "doof"
-  #      observer.reload.should be_updated
-  #    end
-  #  end
-  #  describe "when the observable is not observed" do
-  #    let(:other_polymorphic_observable) { HasOnePolymorphicObservableTest.create(:observer => OtherPossibleObserverTest.new) }
-  #    let(:non_observer){ other_polymorphic_observable.observer }
-  #    describe " and the observable is updated" do
-  #      before(:each) do
-  #        other_polymorphic_observable.update(:name => "doof")
-  #      end
-  #      it "should not update its (non) observer" do
-  #        other_polymorphic_observable.name.should == "doof"
-  #        non_observer.reload.should_not be_updated
-  #      end
-  #    end
-  #  end
-  #
-  #end
 
   describe "when the association is a joined through" do
     class HasOneThroughObservableTest
