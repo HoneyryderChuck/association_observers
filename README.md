@@ -1,6 +1,6 @@
 # AssociationObservers
 
-This is an alternative implementation of the observer pattern. As you may know, Ruby (and Rails/ActiveRecord) already have an
+This is an alternative implementation of the observer pattern. As you may know, Ruby (and Rails/ActiveRecord, and DataMapper) already have an
 implementation of it. This implementation is a variation of the pattern, so it is not supposed to supersede the existing
 implementations, but "complete" them for the specific use-cases addressed.
 
@@ -26,6 +26,9 @@ functionality)
 Observers there are external entities which observe models. They don't exactly work as links between two models, just
 extract functionality (callbacks) which would otherwise flood the model. For that, they're great. For the rest, not really.
 
+## Comparison with DataMapper Observers
+
+Currently doesn't support callbacks on collections (even though it supports observation for any method, cool!)
 
 ### Installation
 
@@ -189,11 +192,18 @@ the ObserverMethods and the ObservableMethods, which will be included in the res
 
 ### TODOs
 
-* Support for other ORM's (currently only supporting ActiveRecord)
+* Support for other ORM's (currently supporting ActiveRecord and DataMapper)
 * Support for other Message Queue libraries (only supporting DelayedJob, rescue, everything that "#delay"s)
 * Action routine definition on the "#observes" declaration (sometimes one does not need the overhead of writing a notifier)
-* Observe method calls (currently only observing model callbacks)
 * Overall spec readability
+
+* ActiveRecord: Observe method calls (currently only observing model callbacks)
+* DataMapper: Support Many-to-Many collection observation (currently ignoring)
+
+## STATUS
+
+* Support for ActiveRecord
+* Support for DataMapper
 
 ### Rails
 
