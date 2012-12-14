@@ -9,6 +9,6 @@ rvm:
   - 1.9.3
   - jruby
   - rbx
-script: bundle exec rspec spec
+script: bundle exec rake spec
 before_script:
   - mysql -e 'create database association_observers;'
