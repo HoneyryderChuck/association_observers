@@ -1,5 +1,7 @@
 # -*- encoding : utf-8 -*-
+require "./spec/active_record_helper"
 require "./spec/spec_helper"
+
 
 describe AssociationObservers do
   class TestUpdateNotifier < Notifier::Base

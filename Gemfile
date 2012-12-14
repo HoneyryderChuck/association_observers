@@ -6,9 +6,12 @@ group :development do
 end
 
 gem 'activerecord'
+gem 'datamapper'
 
 platforms :ruby do
   gem 'mysql2'
+  gem 'dm-mysql-adapter'
+  gem "debugger"
 end
 
 

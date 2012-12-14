@@ -58,7 +58,7 @@ module Notifier
     # @param [Array[ActiveRecord::Relation]] many_observers the observers which will be notified; each element represents a one-to-many relation
     def notify_many(observable, many_observers)
       many_observers.each do |observers|
-        observers.find_each(:batch_size => 10) do |observer|
+        AssociationObservers::batched_each(observers, 10) do |observer|
           yield(observable, observer) if conditions(observable, observer)
         end if conditions_many(observable, observers)
       end

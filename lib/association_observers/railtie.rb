@@ -4,9 +4,12 @@ module AssociationObservers
     ActiveSupport.on_load :active_record do
       require 'association_observers/activerecord'
     end
+    ActiveSupport.on_load :data_mapper do
+      require 'association_observers/datamapper'
+    end
   end
   class Railtie < Rails::Railtie
-    initializer 'association_observers.insert_into_active_record' do
+    initializer 'association_observers.insert_into_orm' do
       AssociationObservers.initialize_railtie
     end
     initializer 'association_observers.autoload', :before => :set_autoload_paths do |app|

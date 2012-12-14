@@ -4,6 +4,8 @@ require "association_observers/notifiers/base"
 require "association_observers/notifiers/propagation_notifier"
 
 require "association_observers/ruby18" if RUBY_VERSION < "1.9"
+require "active_support/core_ext/array/extract_options"
+require "active_support/core_ext/string/inflections"
 
 # Here it is defined the basic behaviour of how observer/observable model associations are set. There are here three
 # main roles defined: The observer associations, the observable associations, and the notifiers (the real observers).
@@ -22,18 +24,41 @@ require "association_observers/ruby18" if RUBY_VERSION < "1.9"
 #
 # @author Tiago Cardoso
 module AssociationObservers
-  # translation of AR callbacks to collection callbacks; we want to ignore the update on collections because neither
-  # add nor remove shall be considered an update event in the observables
-  # @example
-  #   class RichMan < ActiveRecord::Base
-  #     has_many :cars
-  #     observes :cars, :on => :update
-  #     ...
-  #   end
-  #
-  #   in this example, for instance, the rich man wants only to be notified when the cars are update, not when he
-  #   gets a new one or when one of them goes to the dumpster
-  COLLECTION_CALLBACKS_MAPPER = {:create => :add, :save => :add, :destroy => :remove}
+
+  # @abstract
+  # @return [Symbol] ORM instance method name which checks whether the record is a new instance
+  def self.check_new_record_method
+    raise "should be defined in an adapter for the used ORM"
+  end
+
+  # @abstract
+  # @return [Symbol] ORM collection method name to get the model of its children
+  def self.fetch_model_from_collection
+    raise "should be defined in an adapter for the used ORM"
+  end
+
+  # @abstract
+  # implementation of an ORM-specifc batched each enumerator on a collection
+  def self.batched_each(collection, batch, &block)
+    raise "should be defined in an adapter for the used ORM"
+  end
+
+  # @abstract
+  # checks the parameters received by the observer DSL call, handles unexpected input according by triggering exceptions,
+  # warnings, deprecation messages
+  # @param [Class] observer the observer class
+  # @param [Array] observable_associations collection of the names of associations on the observer which will be observed
+  # @param [Array] notifier_classes collection of the notifiers for the observation
+  # @param [Array] observer_callbacks collection of the callbacks/methods to be observed
+  def self.validate_parameters(observer, observable_associations, notifier_classes, observer_callbacks)
+    raise "should be defined in an adapter for the used ORM"
+  end
+
+
+  def self.included(model)
+    model.extend ClassMethods
+    model.send :include, InstanceMethods
+  end
 
   # Methods to be added to observer associations
   module IsObserverMethods
@@ -41,15 +66,77 @@ module AssociationObservers
 
     module ClassMethods
       def observer? ; true ; end
+
+      private
+
+      # @abstract
+      # includes modules in the observer model
+      def observer_extensions ; ; end
+
+
+      # @param [Array] association_names collection  of association names
+      # @return [Array] a collection of association class/options pairs
+      def get_association_options_pairs(association_names)
+        raise "should be defined in an adapter for the used ORM"
+      end
+
+      # @param [Array] associations collection of association names
+      # @return [Array] the collection of associations which match collection associations
+      def filter_collection_associations(associations)
+        raise "should be defined in an adapter for the used ORM"
+      end
+
+
+      # given a collection of callbacks, it defines a private routine for each of them; this subroutine will notify the observers
+      # which look on the callback the subroutine it is addressed to
+      # @param [Array] callbacks a collection of callbacks as understood by the observers (:create, :update, :update, :destroy)
+      # @param [Array] notifiers a collection of notifier classes
+      # @return [Array] a collection of callback/sob-routine pairs
+      def define_collection_callback_routines(callbacks, notifiers)
+        raise "should be defined in an adapter for the used ORM"
+      end
+
+      # given a set of collection associations and a collection of callback/method_name pairs, it redefines the association
+      # setting the respective callback routines for each of them
+      # @param [Array] associations a collection of plural association names
+      # @param [Hash, Array] callback_procs a collection of callback/method_name pairs
+      def redefine_collection_associations_with_collection_callbacks(associations, callback_procs)
+        raise "should be defined in an adapter for the used ORM"
+      end
     end
   end
 
   # Methods to be added to observable associations
   module IsObservableMethods
-    def self.included(base) ; base.extend(ClassMethods) ; end
+    def self.included(base)
+      base.extend(ClassMethods)
+    end
 
     module ClassMethods
       def observable? ; true ; end
+
+      private
+
+      # @abstract
+      # includes modules in the observable model
+      def observable_extensions ; ; end
+
+      # @abstract
+      # loads the notifiers and observers for this observable class
+      # @param [Array] notifiers notifiers to be included
+      # @param [Array] callbacks collection of callbacks/methods to be observed
+      # @param [Class] observer_class class of the observer
+      # @param [Symbol] association_name name by which this observable is known in the observer
+      def set_observers(notifiers, callbacks, observer_class, association_name)
+        raise "should be defined in an adapter for the used ORM"
+      end
+
+      # @abstract
+      # sets the triggering by callbacks of the notification
+      # @param [Array] callbacks callbacks which will be observed and trigger notification behaviour
+      def set_notification_on_callbacks(callbacks)
+        raise "should be defined in an adapter for the used ORM"
+      end
     end
 
     def unobservable! ; @unobservable = true ; end
@@ -85,17 +172,23 @@ module AssociationObservers
       opts = args.extract_options!
       observer_class = self
 
-      plural_associations = args.select{ |arg| self.reflections[arg].collection? }
+
+      # standard observer association methods
+      include IsObserverMethods
+
+      observer_extensions
+
+      plural_associations = filter_collection_associations(args)
 
       association_name = (opts[:as] || self.name.demodulize.underscore).to_s
       notifier_classes = Array(opts[:notifiers] || opts[:notifier]).map{|notifier| notifier.to_s.end_with?("_notifier") ? notifier : "#{notifier}_notifier".to_s }
       observer_callbacks = Array(opts[:on] || [:save, :destroy])
 
       # no observer, how are you supposed to observe?
-      raise "Invalid callback; possible options: :create, :update, :save, :destroy" unless observer_callbacks.all?{|o|[:create,:update,:save,:destroy].include?(o.to_sym)}
+      AssociationObservers::validate_parameters(self, args, notifier_classes, observer_callbacks)
 
-      # standard observer association methods
-      include IsObserverMethods
+
+
 
       notifier_classes.map!{|notifier_class|notifier_class.to_s.classify.constantize} << PropagationNotifier
 
@@ -105,42 +198,20 @@ module AssociationObservers
       end
 
       # 1: for each observed association, define behaviour
-      self.reflect_on_all_associations.select{ |r| args.include?(r.name) }.map{|r| [r.klass, r.options] }.each do |klass, options|
+      get_association_options_pairs(args).each do |klass, options|
         klass.instance_eval do
 
-          include ActiveModel::Observing
+          include IsObservableMethods
 
-          # load observers from this observable association
-          observer_association_name = (options[:as] || association_name).to_s
-          notifier_classes.each do |notifier_class|
-            observer_callbacks.each do |callback|
-              options = {}
-              observer_association = self.reflect_on_association(observer_association_name.to_sym) ||
-                                     self.reflect_on_association(observer_association_name.pluralize.to_sym)
-              options[:observer_class] = observer_class.base_class if observer_association.options[:polymorphic]
-
-              self.add_observer notifier_class.new(callback, observer_association.name, options)
-              include "#{notifier_class.name}::ObservableMethods".constantize if notifier_class.constants.map(&:to_sym).include?(:ObservableMethods)
-            end
-          end
-
-          # sets the callbacks to inform observers
-          observer_callbacks.each do |callback|
-            if [:create, :update].include?(callback)
-              real_callback = :save
-              callback_opts = {:on => callback}
-            else
-              real_callback = callback
-              callback_opts = {}
-            end
-            send("after_#{real_callback}", callback_opts) do
-              notify! callback
-            end
-          end
+          observable_extensions
 
           attr_reader :unobservable
 
-          include IsObservableMethods
+          # load observers from this observable association
+          set_observers(notifier_classes, observer_callbacks, observer_class, (options[:as] || association_name).to_s)
+
+          # sets the callbacks to inform observers
+          set_notification_on_callbacks(observer_callbacks)
         end
 
       end
@@ -148,45 +219,8 @@ module AssociationObservers
       # 2. for each collection association, insert after add and after remove callbacks
 
       # first step is defining the methods which will be called by the collection callbacks.
-      callback_procs = observer_callbacks.map do |callback|
-        notifier_classes.map do |notifier_class|
-          routine_name = :"__observer_#{callback}_callback_for_#{notifier_class.name.demodulize.underscore}__"
-          class_eval <<-END
-            def #{routine_name}(element)
-              callback = element.class.observer_instances.detect do |notifier|
-                notifier.class.name == '#{notifier_class}' and notifier.callback == :#{callback}
-              end
-              callback.notify(element, [self]) unless callback.nil?
-            end
-            private :#{routine_name}
-          END
-          [callback, routine_name]
-        end
-      end.flatten(1)
-
       # second step is redefining the associations with the proper callbacks to be triggered
-      plural_associations.each do |assoc|
-        a = self.reflect_on_association(assoc)
-        callbacks = Hash[callback_procs.group_by{|code, proc| COLLECTION_CALLBACKS_MAPPER[code] }.reject{|k, v| k.nil? }.map{ |code, val| [:"after_#{code}", val.map(&:last)] }]
-        next if callbacks.empty?
-        # this snippet takes care that the array of callbacks which will get inserted in the association will not
-        # overwrite whatever callbacks you may have already defined
-        callbacks.each do |callback, procs|
-          callbacks[callback] += Array(a.options[callback])
-        end
-
-        if RUBY_VERSION < "1.9"
-          assoc_options = AssociationObservers::extended_to_s(a.options)
-          callback_options = AssociationObservers::extended_to_s(callbacks)
-        else
-          assoc_options = a.options.to_s
-          callback_options = callbacks
-        end
-
-        class_eval <<-END
-          #{a.macro} :#{assoc}, #{assoc_options}.merge(#{callback_options})
-        END
-      end
+      redefine_collection_associations_with_collection_callbacks(plural_associations, define_collection_callback_routines(observer_callbacks, notifier_classes))
 
     end
   end
@@ -195,5 +229,6 @@ end
 if defined?(Rails::Railtie) # RAILS
   require 'association_observers/railtie'
 else
-  require 'association_observers/activerecord'
+  require 'association_observers/activerecord' if defined?(ActiveRecord)
+  require 'association_observers/datamapper' if defined?(DataMapper)
 end
