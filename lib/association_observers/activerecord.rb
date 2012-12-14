@@ -2,6 +2,17 @@
 if defined?(ActiveRecord)
 
   module AssociationObservers
+    def self.check_new_record_method
+      :new_record?
+    end
+
+    def self.fetch_model_from_collection
+      :klass
+    end
+
+    def self.batched_each(collection, batch, &block)
+      collection.find_each(:batch_size => batch, &block)
+    end
 
     module IsObservableMethods
       module ClassMethods
@@ -51,6 +62,51 @@ if defined?(ActiveRecord)
 
         def filter_collection_associations(associations)
           associations.select{ |arg| self.reflections[arg].collection? }
+        end
+
+        def define_collection_callback_routines(callbacks, notifiers)
+          callbacks.map do |callback|
+            notifiers.map do |notifier|
+              routine_name = :"__observer_#{callback}_callback_for_#{notifier.name.demodulize.underscore}__"
+              class_eval <<-END
+                def #{routine_name}(element)
+                  callback = element.class.observer_instances.detect do |notifier|
+                    notifier.class.name == '#{notifier}' and notifier.callback == :#{callback}
+                  end
+                  callback.notify(element, [self]) unless callback.nil?
+                end
+                private :#{routine_name}
+              END
+              [callback, routine_name]
+            end
+          end.flatten(1)
+        end
+
+        def redefine_collection_associations_with_collection_callbacks(associations, callback_procs)
+          associations.each do |assoc|
+            a = self.reflect_on_association(assoc)
+            callbacks = Hash[callback_procs.group_by{|code, proc| COLLECTION_CALLBACKS_MAPPER[code] }.reject{|k, v| k.nil? }.map{ |code, val| [:"after_#{code}", val.map(&:last)] }]
+            next if callbacks.empty? # no callbacks, no need to redefine association
+
+            # this snippet takes care that the array of callbacks which will get inserted in the association will not
+            # overwrite whatever callbacks you may have already defined
+            callbacks.each do |callback, procedures|
+              callbacks[callback] += Array(a.options[callback])
+            end
+
+            # bullshit ruby 1.8 can't stringify hashes, arrays, symbols nor strings correctly
+            if RUBY_VERSION < "1.9"
+              assoc_options = AssociationObservers::extended_to_s(a.options)
+              callback_options = AssociationObservers::extended_to_s(callbacks)
+            else
+              assoc_options = a.options.to_s
+              callback_options = callbacks
+            end
+
+            class_eval <<-END
+              #{a.macro} :#{assoc}, #{assoc_options}.merge(#{callback_options})
+            END
+          end
         end
       end
     end
