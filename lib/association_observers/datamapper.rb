@@ -13,6 +13,14 @@ if defined?(DataMapper)
       collection.each(&block) # datamapper batches already by 500 https://groups.google.com/forum/?fromgroups=#!searchin/datamapper/batches/datamapper/lAZWFN4TWAA/G1Gu-ams_QMJ
     end
 
+    def self.validate_parameters(observer, observable_associations, notifier_names, callbacks)
+      observable_associations.each do |o|
+        if observer.relationships[o].is_a?(DataMapper::Associations::ManyToMany::Relationship)
+          warn "this gem does not currently support observation behaviour for many to many relationships"
+        end
+      end
+    end
+
     module IsObservableMethods
       def self.included(model)
         model.extend(ClassMethods)
@@ -71,7 +79,7 @@ if defined?(DataMapper)
 
         def get_association_options_pairs(association_names)
           # TODO: find better way to figure out the class of the relationship entity
-          relationships.select{|r|association_names.include?(r.name)}.map{|r| [(r.is_a?(DataMapper::Associations::ManyToOne::Relationship ) ? r.parent_model_name : r.child_model_name).constantize, r.options] }
+          relationships.select{|r|association_names.include?(r.name)}.map{|r| [(r.is_a?(DataMapper::Associations::ManyToOne::Relationship) ? r.parent_model : r.child_model), r.options] }
         end
 
         def filter_collection_associations(associations)
@@ -79,11 +87,21 @@ if defined?(DataMapper)
         end
 
         def define_collection_callback_routines(callbacks, notifiers)
-
+          callbacks
         end
 
-        def redefine_collection_associations_with_collection_callbacks(associations, callback_procs)
-
+        def redefine_collection_associations_with_collection_callbacks(associations, callbacks)
+          associations.each do |assoc|
+            callbacks.each do |callback|
+              relationship = relationships[assoc]
+              model_method = relationship.is_a?(DataMapper::Associations::ManyToOne::Relationship ) ?
+                             :parent_model :
+                             :child_model
+              relationship.send(model_method).after callback do
+                notify! callback
+              end
+            end
+          end
         end
 
       end

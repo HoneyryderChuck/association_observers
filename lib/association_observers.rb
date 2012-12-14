@@ -37,23 +37,15 @@ module AssociationObservers
     raise "should be defined in an adapter for the used ORM"
   end
 
+  def self.validate_parameters(observer, observer_associations, notifier_classes, observer_callbacks)
+    raise "should be defined in an adapter for the used ORM"
+  end
+
 
   def self.included(model)
     model.extend ClassMethods
     model.send :include, InstanceMethods
   end
-  # translation of AR callbacks to collection callbacks; we want to ignore the update on collections because neither
-  # add nor remove shall be considered an update event in the observables
-  # @example
-  #   class RichMan < ActiveRecord::Base
-  #     has_many :cars
-  #     observes :cars, :on => :update
-  #     ...
-  #   end
-  #
-  #   in this example, for instance, the rich man wants only to be notified when the cars are update, not when he
-  #   gets a new one or when one of them goes to the dumpster
-  COLLECTION_CALLBACKS_MAPPER = {:create => :add, :save => :add, :destroy => :remove}
 
   # Methods to be added to observer associations
   module IsObserverMethods
@@ -167,7 +159,8 @@ module AssociationObservers
       observer_callbacks = Array(opts[:on] || [:save, :destroy])
 
       # no observer, how are you supposed to observe?
-      raise "Invalid callback; possible options: :create, :update, :save, :destroy" unless observer_callbacks.all?{|o|[:create,:update,:save,:destroy].include?(o.to_sym)}
+      AssociationObservers::validate_parameters(self, args, notifier_classes, observer_callbacks)
+
 
 
 

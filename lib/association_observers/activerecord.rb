@@ -14,6 +14,23 @@ if defined?(ActiveRecord)
       collection.find_each(:batch_size => batch, &block)
     end
 
+    def self.validate_parameters(observer, observable_associations, notifier_names, callbacks)
+      raise "Invalid callback; possible options: :create, :update, :save, :destroy" unless callbacks.all?{|o|[:create,:update,:save,:destroy].include?(o.to_sym)}
+    end
+
+    # translation of AR callbacks to collection callbacks; we want to ignore the update on collections because neither
+    # add nor remove shall be considered an update event in the observables
+    # @example
+    #   class RichMan < ActiveRecord::Base
+    #     has_many :cars
+    #     observes :cars, :on => :update
+    #     ...
+    #   end
+    #
+    #   in this example, for instance, the rich man wants only to be notified when the cars are update, not when he
+    #   gets a new one or when one of them goes to the dumpster
+    COLLECTION_CALLBACKS_MAPPER = {:create => :add, :save => :add, :destroy => :remove}
+
     module IsObservableMethods
       module ClassMethods
 
