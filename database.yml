@@ -3,3 +3,10 @@ activerecord:
   encoding: utf8
   username: root
   database: association_observers
+
+
+datamapper:
+  adapter: mysql
+  user: root
+  password:
+  database: association_observers

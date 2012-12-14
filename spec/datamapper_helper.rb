@@ -2,4 +2,6 @@
 require 'rubygems'
 require 'data_mapper'
 
-DataMapper.setup(:default, 'mysql://root:@127.0.0.1/association_observers')
+datamapper_config = YAML.load_file(File.join(File.expand_path('../..', __FILE__), 'database.yml'))["datamapper"]
+
+DataMapper.setup(:default, datamapper_config)

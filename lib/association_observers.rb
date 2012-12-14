@@ -25,19 +25,32 @@ require "active_support/core_ext/string/inflections"
 # @author Tiago Cardoso
 module AssociationObservers
 
+  # @abstract
+  # @return [Symbol] ORM instance method name which checks whether the record is a new instance
   def self.check_new_record_method
     raise "should be defined in an adapter for the used ORM"
   end
 
+  # @abstract
+  # @return [Symbol] ORM collection method name to get the model of its children
   def self.fetch_model_from_collection
     raise "should be defined in an adapter for the used ORM"
   end
 
+  # @abstract
+  # implementation of an ORM-specifc batched each enumerator on a collection
   def self.batched_each(collection, batch, &block)
     raise "should be defined in an adapter for the used ORM"
   end
 
-  def self.validate_parameters(observer, observer_associations, notifier_classes, observer_callbacks)
+  # @abstract
+  # checks the parameters received by the observer DSL call, handles unexpected input according by triggering exceptions,
+  # warnings, deprecation messages
+  # @param [Class] observer the observer class
+  # @param [Array] observable_associations collection of the names of associations on the observer which will be observed
+  # @param [Array] notifier_classes collection of the notifiers for the observation
+  # @param [Array] observer_callbacks collection of the callbacks/methods to be observed
+  def self.validate_parameters(observer, observable_associations, notifier_classes, observer_callbacks)
     raise "should be defined in an adapter for the used ORM"
   end
 
@@ -56,16 +69,18 @@ module AssociationObservers
 
       private
 
+      # @abstract
+      # includes modules in the observer model
       def observer_extensions ; ; end
 
 
-      # @param [Array] collection of association names
+      # @param [Array] association_names collection  of association names
       # @return [Array] a collection of association class/options pairs
       def get_association_options_pairs(association_names)
         raise "should be defined in an adapter for the used ORM"
       end
 
-      # @param [Array] collection of association names
+      # @param [Array] associations collection of association names
       # @return [Array] the collection of associations which match collection associations
       def filter_collection_associations(associations)
         raise "should be defined in an adapter for the used ORM"
@@ -102,12 +117,23 @@ module AssociationObservers
 
       private
 
+      # @abstract
+      # includes modules in the observable model
       def observable_extensions ; ; end
 
+      # @abstract
+      # loads the notifiers and observers for this observable class
+      # @param [Array] notifiers notifiers to be included
+      # @param [Array] callbacks collection of callbacks/methods to be observed
+      # @param [Class] observer_class class of the observer
+      # @param [Symbol] association_name name by which this observable is known in the observer
       def set_observers(notifiers, callbacks, observer_class, association_name)
         raise "should be defined in an adapter for the used ORM"
       end
 
+      # @abstract
+      # sets the triggering by callbacks of the notification
+      # @param [Array] callbacks callbacks which will be observed and trigger notification behaviour
       def set_notification_on_callbacks(callbacks)
         raise "should be defined in an adapter for the used ORM"
       end
