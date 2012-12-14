@@ -10,3 +10,5 @@ datamapper:
   user: root
   password:
   database: association_observers
+  host: 127.0.0.1
+  port: 3306

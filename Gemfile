@@ -7,10 +7,11 @@ end
 
 gem 'activerecord'
 gem 'datamapper'
+gem 'dm-mysql-adapter'
 
 platforms :ruby do
   gem 'mysql2'
-  gem 'dm-mysql-adapter'
+
 end
 
 
