@@ -13,7 +13,7 @@ module AssociationObservers
       AssociationObservers.initialize_railtie
     end
     initializer 'association_observers.autoload', :before => :set_autoload_paths do |app|
-      app.config.autoload_paths += Rails.root.join("app", "notifiers")
+      app.config.autoload_paths << Rails.root.join("app", "notifiers")
     end
   end
 end
