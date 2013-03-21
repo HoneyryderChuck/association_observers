@@ -10,6 +10,10 @@ if defined?(ActiveRecord)
       :klass
     end
 
+      def self.class_variable_set(klass, name)
+        klass.cattr_accessor name
+      end
+
     def self.batched_each(collection, batch, &block)
       collection.find_each(:batch_size => batch, &block)
     end

@@ -9,6 +9,20 @@ if defined?(DataMapper)
       :model
     end
 
+    def self.class_variable_set(klass, name)
+      klass.instance_eval <<-END
+        @@#{name}=nil
+        def #{name}
+          @@#{name}
+        end
+
+        def #{name}=(value)
+          @@#{name} = value
+        end
+      END
+
+    end
+
     def self.batched_each(collection, batch, &block)
       collection.each(&block) # datamapper batches already by 500 https://groups.google.com/forum/?fromgroups=#!searchin/datamapper/batches/datamapper/lAZWFN4TWAA/G1Gu-ams_QMJ
     end

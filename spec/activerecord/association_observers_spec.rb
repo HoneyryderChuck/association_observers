@@ -90,6 +90,7 @@ describe AssociationObservers do
     has_many :polymorphic_has_many_observable_tests, :as => :observer
 
     has_one :observer_observer_test
+    has_many :many_observer_observer_tests
 
     has_and_belongs_to_many :habtm_observable_tests
 
@@ -120,6 +121,13 @@ describe AssociationObservers do
   end
 
   class ObserverObserverTest < ObserverAbstractTest
+    belongs_to :observer_test
+    attr_accessible :observer_test
+
+    observes :observer_test, :notifiers => :test_update, :on => :update
+  end
+
+  class ManyObserverObserverTest < ObserverAbstractTest
     belongs_to :observer_test
     attr_accessible :observer_test
 
@@ -424,6 +432,29 @@ describe AssociationObservers do
         observer_observer.observer_test.collection_observable_test.name.should == "doof"
         observer1.reload.should be_updated
         observer_observer.reload.should be_updated
+      end
+    end
+  end
+
+  describe "when the observer has an observer collection itself" do
+    before(:each) do
+      observer1.update_attribute(:many_observer_observer_tests, [ManyObserverObserverTest.new,
+                                                                 ManyObserverObserverTest.new,
+                                                                 ManyObserverObserverTest.new])
+      observer1.reload
+    end
+    describe "and the batch size for the observer observers has changed" do
+      before do
+        @old_batch_size = ObserverTest.observable_options[:batch_size]
+        ManyObserverObserverTest.stub! :observable? => true
+        ObserverTest.batch_size = 101
+      end
+      after do
+        ObserverTest.batch_size = @old_batch_size
+      end
+      it "should update the observer observers collection with the right batch size" do
+        AssociationObservers.should_receive(:batched_each).with(anything, 101).any_number_of_times
+        belongs_to_observable.update_attributes(:name => "doof")
       end
     end
   end

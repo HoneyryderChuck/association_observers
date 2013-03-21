@@ -70,10 +70,19 @@ module AssociationObservers
 
   # Methods to be added to observer associations
   module IsObserverMethods
-    def self.included(base) ; base.extend(ClassMethods) ; end
+    def self.included(base)
+      base.extend(ClassMethods)
+      AssociationObservers::class_variable_set(base, :observable_options)
+      base.observable_options = AssociationObservers::default_options
+    end
 
     module ClassMethods
       def observer? ; true ; end
+
+      def batch_size=(val)
+        raise "AssociationObservers: it must be an integer value" unless val.is_a?(Fixnum)
+        self.observable_options[:batch_size] = val
+      end
 
       private
 
