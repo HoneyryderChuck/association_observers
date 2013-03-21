@@ -25,8 +25,7 @@ require "active_support/core_ext/string/inflections"
 # @author Tiago Cardoso
 module AssociationObservers
   @options = {
-      batch_size: 50,
-      activate_delay: true
+      batch_size: 50
   }
 
   def self.default_options
@@ -83,6 +82,7 @@ module AssociationObservers
         raise "AssociationObservers: it must be an integer value" unless val.is_a?(Fixnum)
         self.observable_options[:batch_size] = val
       end
+
 
       private
 
