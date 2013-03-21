@@ -24,6 +24,14 @@ require "active_support/core_ext/string/inflections"
 #
 # @author Tiago Cardoso
 module AssociationObservers
+  @options = {
+      batch_size: 50,
+      activate_delay: true
+  }
+
+  def self.default_options
+    @options
+  end
 
   # @abstract
   # @return [Symbol] ORM instance method name which checks whether the record is a new instance
