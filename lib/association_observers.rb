@@ -1,5 +1,6 @@
 # -*- encoding : utf-8 -*-
 require "association_observers/version"
+require "association_observers/many_delayed_notification"
 require "association_observers/notifiers/base"
 require "association_observers/notifiers/propagation_notifier"
 
@@ -33,6 +34,17 @@ module AssociationObservers
   end
 
   # @abstract
+  # @return [Symbol] ORM class method that fetches a record from the DB
+  def self.find(klass, attributes)
+    raise "should be defined in an adapter for the used ORM"
+  end
+
+  def self.get_field(klass_or_relation, attrs)
+    raise "should be defined in an adapter for the used ORM"
+  end
+
+
+  # @abstract
   # @return [Symbol] ORM instance method name which checks whether the record is a new instance
   def self.check_new_record_method
     raise "should be defined in an adapter for the used ORM"
@@ -48,6 +60,30 @@ module AssociationObservers
   # implementation of an ORM-specifc batched each enumerator on a collection
   def self.batched_each(collection, batch, &block)
     raise "should be defined in an adapter for the used ORM"
+  end
+
+  def self.enqueue_notifications(callback, observers, klass, batch_size, &action)
+    if callback.eql?(:destroy)
+      AssociationObservers::batched_each(observers, batch_size, &action)
+    else
+      i = 1
+      loop do
+        ids = AssociationObservers.get_field(observers, :fields => [:id], :limit => batch_size, :offset => i*batch_size)
+        break if ids.empty?
+        enqueue(ManyDelayedNotification, callback, ids, klass, action)
+        i += 1
+      end
+    end
+  end
+
+  def self.enqueue(task, callback, *args)
+    if callback.eql?(:destroy)
+      task.new(*args)
+      t.perform
+    else
+      # enqueue later
+      t.perform
+    end
   end
 
   # @abstract

@@ -2,6 +2,14 @@
 if defined?(ActiveRecord)
 
   module AssociationObservers
+    def self.find(klass, attributes)
+      klass.send("find_by_#{attributes.keys.join('_and_')}", *attributes.values)
+    end
+
+    def self.get_field(klass, attrs={})
+      klass.limit(attrs[:limit]).offset(attrs[:offset]).pluck(*attrs[:fields])
+    end
+
     def self.check_new_record_method
       :new_record?
     end

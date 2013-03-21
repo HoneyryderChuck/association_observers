@@ -1,6 +1,14 @@
 # -*- encoding : utf-8 -*-
 if defined?(DataMapper)
   module AssociationObservers
+    def self.find(klass, attributes)
+      klass.get(attributes)
+    end
+
+    def self.get_field(klass, attrs={})
+      klass.all(attrs)
+    end
+
     def self.check_new_record_method
       :new?
     end
