@@ -249,6 +249,6 @@ end
 if defined?(Rails::Railtie) # RAILS
   require 'association_observers/railtie'
 else
-  require 'association_observers/activerecord' if defined?(ActiveRecord)
-  require 'association_observers/datamapper' if defined?(DataMapper)
+  require 'association_observers/active_record' if defined?(ActiveRecord)
+  require 'association_observers/data_mapper' if defined?(DataMapper)
 end

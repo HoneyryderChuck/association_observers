@@ -2,7 +2,7 @@
 if defined?(DataMapper)
   module AssociationObservers
     module Orm
-      autoload :DataMapper, "association_observers/orm/datamapper"
+      autoload :DataMapper, "association_observers/orm/data_mapper"
     end
 
     def self.orm_adapter

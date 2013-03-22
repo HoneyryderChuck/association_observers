@@ -2,10 +2,10 @@
 module AssociationObservers
   def self.initialize_railtie
     ActiveSupport.on_load :active_record do
-      require 'association_observers/activerecord'
+      require 'association_observers/active_record'
     end
     ActiveSupport.on_load :data_mapper do
-      require 'association_observers/datamapper'
+      require 'association_observers/data_mapper'
     end
   end
   class Railtie < Rails::Railtie
