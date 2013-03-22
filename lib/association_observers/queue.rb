@@ -6,24 +6,22 @@ module AssociationObservers
       if callback.eql?(:destroy)
         AssociationObservers::orm_adapter.batched_each(observers, batch_size, &action)
       else
-        i = 1
+        i = 0
         loop do
           ids = AssociationObservers::orm_adapter.get_field(observers, :fields => [:id], :limit => batch_size, :offset => i*batch_size)
           break if ids.empty?
-          enqueue(ManyDelayedNotification, callback, ids, klass, action)
+          enqueue(Workers::ManyDelayedNotification, ids, klass, action)
           i += 1
         end
       end
     end
 
-    def enqueue(task, callback, *args)
-      if callback.eql?(:destroy)
-        task.new(*args)
-        t.perform
-      else
-        # enqueue later
-        t.perform
-      end
+    private
+
+    # implementation when there is no background processing queue -> execute immediately
+    def enqueue(task, *args)
+      t = task.new(*args)
+      t.perform
     end
 
   end

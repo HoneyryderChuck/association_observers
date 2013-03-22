@@ -3,17 +3,17 @@ module AssociationObservers
   module Workers
     class ManyDelayedNotification
 
-      attr_reader :callback, :observer_ids, :klass
+      attr_reader :observer_ids, :klass, :action
 
-      def initialize(callback, observer_ids, klass)
-        @callback = callback
+      def initialize(observer_ids, klass, action)
         @observer_ids = observer_ids
         @klass = klass.name
+        @action = action
       end
 
       def perform
-        observers = AssociationObservers.find(@klass, :id => @observer_ids)
-        observers.each(&action)
+        observers = AssociationObservers::orm_adapter.find_all(@klass.constantize, :id => @observer_ids)
+        observers.each(&@action)
       end
 
     end

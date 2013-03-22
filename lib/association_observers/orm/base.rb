@@ -3,8 +3,8 @@ module AssociationObservers
   module Orm
     class Base
       # @abstract
-      # @return [Symbol] ORM class method that fetches a record from the DB
-      def self.find(klass, attributes)
+      # @return [Symbol] ORM class method that fetches records from the DB
+      def self.find_all(klass, attributes)
         raise "should be defined in an adapter for the used ORM"
       end
 

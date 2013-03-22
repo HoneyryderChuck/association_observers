@@ -8,8 +8,6 @@ require "active_support/core_ext/array/extract_options"
 require "active_support/core_ext/string/inflections"
 
 
-autoload :ManyDelayedNotification, "association_observers/many_delayed_notification"
-
 # Here it is defined the basic behaviour of how observer/observable model associations are set. There are here three
 # main roles defined: The observer associations, the observable associations, and the notifiers (the real observers).
 # Observer Associations: those are the associations of an observable which will be "listening/observing" to updates
@@ -28,6 +26,9 @@ autoload :ManyDelayedNotification, "association_observers/many_delayed_notificat
 # @author Tiago Cardoso
 module AssociationObservers
   autoload :Queue, "association_observers/queue"
+  module Workers
+    autoload :ManyDelayedNotification, "association_observers/workers/many_delayed_notification"
+  end
 
   def self.orm_adapter
     raise "no adapter for your ORM"

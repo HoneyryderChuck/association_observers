@@ -4,8 +4,8 @@ require "association_observers/orm/base"
 module AssociationObservers
   module Orm
     class DataMapper < Base
-      def self.find(klass, attributes)
-        klass.get(attributes)
+      def self.find_all(klass, attributes)
+        klass.all(attributes)
       end
 
       def self.get_field(klass, attrs={})
