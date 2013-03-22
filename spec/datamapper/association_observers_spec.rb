@@ -1,5 +1,5 @@
 # -*- encoding : utf-8 -*-
-require "./spec/datamapper_helper"
+require "./spec/helpers/datamapper_helper"
 require "./spec/spec_helper"
 
 
