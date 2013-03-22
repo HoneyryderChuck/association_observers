@@ -5,6 +5,10 @@ group :development do
   gem "yard",       "0.8.2.1", :require => false
 end
 
+group :test do
+  gem "delayed_job_active_record", :require => false
+end
+
 gem 'activerecord'
 gem 'datamapper'
 gem 'dm-mysql-adapter'
