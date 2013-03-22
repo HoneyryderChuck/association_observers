@@ -7,6 +7,9 @@ module AssociationObservers
     ActiveSupport.on_load :data_mapper do
       require 'association_observers/data_mapper'
     end
+    ActiveSupport.on_load :delayed_job do
+      require 'association_observers/delayed_job'
+    end
   end
   class Railtie < Rails::Railtie
     initializer 'association_observers.insert_into_orm' do
