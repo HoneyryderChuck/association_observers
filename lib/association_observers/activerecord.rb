@@ -2,32 +2,12 @@
 if defined?(ActiveRecord)
 
   module AssociationObservers
-    def self.find(klass, attributes)
-      klass.send("find_by_#{attributes.keys.join('_and_')}", *attributes.values)
+    module Orm
+      autoload :ActiveRecord, "association_observers/orm/active_record"
     end
 
-    def self.get_field(klass, attrs={})
-      klass.limit(attrs[:limit]).offset(attrs[:offset]).pluck(*attrs[:fields])
-    end
-
-    def self.check_new_record_method
-      :new_record?
-    end
-
-    def self.fetch_model_from_collection
-      :klass
-    end
-
-      def self.class_variable_set(klass, name)
-        klass.cattr_accessor name
-      end
-
-    def self.batched_each(collection, batch, &block)
-      collection.find_each(:batch_size => batch, &block)
-    end
-
-    def self.validate_parameters(observer, observable_associations, notifier_names, callbacks)
-      raise "Invalid callback; possible options: :create, :update, :save, :destroy" unless callbacks.all?{|o|[:create,:update,:save,:destroy].include?(o.to_sym)}
+    def self.orm_adapter
+      @orm_adapter ||= Orm::ActiveRecord
     end
 
     # translation of AR callbacks to collection callbacks; we want to ignore the update on collections because neither

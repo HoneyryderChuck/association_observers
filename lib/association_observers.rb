@@ -1,12 +1,14 @@
 # -*- encoding : utf-8 -*-
 require "association_observers/version"
-require "association_observers/many_delayed_notification"
 require "association_observers/notifiers/base"
 require "association_observers/notifiers/propagation_notifier"
 
 require "association_observers/ruby18" if RUBY_VERSION < "1.9"
 require "active_support/core_ext/array/extract_options"
 require "active_support/core_ext/string/inflections"
+
+
+autoload :ManyDelayedNotification, "association_observers/many_delayed_notification"
 
 # Here it is defined the basic behaviour of how observer/observable model associations are set. There are here three
 # main roles defined: The observer associations, the observable associations, and the notifiers (the real observers).
@@ -25,6 +27,11 @@ require "active_support/core_ext/string/inflections"
 #
 # @author Tiago Cardoso
 module AssociationObservers
+
+  def self.orm_adapter
+    raise "no adapter for your ORM"
+  end
+
   @options = {
       batch_size: 50
   }
@@ -33,42 +40,13 @@ module AssociationObservers
     @options
   end
 
-  # @abstract
-  # @return [Symbol] ORM class method that fetches a record from the DB
-  def self.find(klass, attributes)
-    raise "should be defined in an adapter for the used ORM"
-  end
-
-  def self.get_field(klass_or_relation, attrs)
-    raise "should be defined in an adapter for the used ORM"
-  end
-
-
-  # @abstract
-  # @return [Symbol] ORM instance method name which checks whether the record is a new instance
-  def self.check_new_record_method
-    raise "should be defined in an adapter for the used ORM"
-  end
-
-  # @abstract
-  # @return [Symbol] ORM collection method name to get the model of its children
-  def self.fetch_model_from_collection
-    raise "should be defined in an adapter for the used ORM"
-  end
-
-  # @abstract
-  # implementation of an ORM-specifc batched each enumerator on a collection
-  def self.batched_each(collection, batch, &block)
-    raise "should be defined in an adapter for the used ORM"
-  end
-
   def self.enqueue_notifications(callback, observers, klass, batch_size, &action)
     if callback.eql?(:destroy)
-      AssociationObservers::batched_each(observers, batch_size, &action)
+      AssociationObservers::orm_adapter.batched_each(observers, batch_size, &action)
     else
       i = 1
       loop do
-        ids = AssociationObservers.get_field(observers, :fields => [:id], :limit => batch_size, :offset => i*batch_size)
+        ids = AssociationObservers::orm_adapter.get_field(observers, :fields => [:id], :limit => batch_size, :offset => i*batch_size)
         break if ids.empty?
         enqueue(ManyDelayedNotification, callback, ids, klass, action)
         i += 1
@@ -86,16 +64,7 @@ module AssociationObservers
     end
   end
 
-  # @abstract
-  # checks the parameters received by the observer DSL call, handles unexpected input according by triggering exceptions,
-  # warnings, deprecation messages
-  # @param [Class] observer the observer class
-  # @param [Array] observable_associations collection of the names of associations on the observer which will be observed
-  # @param [Array] notifier_classes collection of the notifiers for the observation
-  # @param [Array] observer_callbacks collection of the callbacks/methods to be observed
-  def self.validate_parameters(observer, observable_associations, notifier_classes, observer_callbacks)
-    raise "should be defined in an adapter for the used ORM"
-  end
+
 
 
   def self.included(model)
@@ -107,7 +76,7 @@ module AssociationObservers
   module IsObserverMethods
     def self.included(base)
       base.extend(ClassMethods)
-      AssociationObservers::class_variable_set(base, :observable_options)
+      AssociationObservers::orm_adapter.class_variable_set(base, :observable_options)
       base.observable_options = AssociationObservers::default_options
     end
 
@@ -238,9 +207,7 @@ module AssociationObservers
       observer_callbacks = Array(opts[:on] || [:save, :destroy])
 
       # no observer, how are you supposed to observe?
-      AssociationObservers::validate_parameters(self, args, notifier_classes, observer_callbacks)
-
-
+      AssociationObservers::orm_adapter.validate_parameters(self, args, notifier_classes, observer_callbacks)
 
 
       notifier_classes.map!{|notifier_class|notifier_class.to_s.classify.constantize} << PropagationNotifier
