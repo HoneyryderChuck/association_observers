@@ -29,7 +29,7 @@ module AssociationObservers
         loop do
           ids = AssociationObservers::orm_adapter.get_field(observers, :fields => [:id], :limit => batch_size, :offset => i*batch_size)
           break if ids.empty?
-          enqueue(Workers::ManyDelayedNotification, ids, klass, proxy_method_name)
+          enqueue(Workers::ManyDelayedNotification, ids, klass.name, proxy_method_name)
           i += 1
         end
       end

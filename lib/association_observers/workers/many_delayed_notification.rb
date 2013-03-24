@@ -5,9 +5,9 @@ module AssociationObservers
 
       attr_reader :observer_ids, :klass, :proxy_method_name
 
-      def initialize(observer_ids, klass, proxy_method_name)
+      def initialize(observer_ids, klass_name, proxy_method_name)
         @observer_ids = observer_ids
-        @klass = klass.name
+        @klass = klass_name
         @proxy_method_name = proxy_method_name
       end
 
