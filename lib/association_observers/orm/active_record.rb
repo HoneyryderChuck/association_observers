@@ -8,12 +8,10 @@ module AssociationObservers
         klass.send("find_all_by_#{attributes.keys.join('_and_')}", *attributes.values)
       end
 
-      def self.get_field(klass, attrs={})
-        klass.limit(attrs[:limit]).offset(attrs[:offset]).pluck(*attrs[:fields])
-      end
-
-      def self.check_new_record_method
-        :new_record?
+      def self.get_field(collection, attrs={})
+        collection.is_a?(::ActiveRecord::Relation) ?
+        collection.limit(attrs[:limit]).offset(attrs[:offset]).pluck(*attrs[:fields]) :
+        super
       end
 
       def self.fetch_model_from_collection
@@ -25,7 +23,10 @@ module AssociationObservers
         end
 
       def self.batched_each(collection, batch, &block)
-        collection.find_each(:batch_size => batch, &block)
+        if collection.is_a?(::ActiveRecord::Relation) ?
+           collection.find_each(:batch_size => batch, &block) :
+           super
+        end
       end
 
       def self.validate_parameters(observer, observable_associations, notifier_names, callbacks)

@@ -344,6 +344,7 @@ describe AssociationObservers do
       before do
         @old_batch_size = ObserverTest.observable_options[:batch_size]
         ManyObserverObserverTest.stub! :observable? => true
+        ManyObserverObserverTest.any_instance.stub :notify_observers => true
         ObserverTest.batch_size = 101
       end
       after do

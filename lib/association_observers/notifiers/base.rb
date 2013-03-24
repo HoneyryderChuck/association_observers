@@ -70,8 +70,10 @@ module Notifier
     # @param [Object] observable the object which is notifying
     # @param [Array[Object]] observers the observers which will be notified; each element represents a one-to-one association
     def notify_ones(observable, observers)
-      observers.each do |observer|
-        yield(observable, observer) if conditions(observable, observer)
+      observers.each do |uniq_observer|
+        AssociationObservers::queue.enqueue_notifications(@callback, [uniq_observer], uniq_observer.class, 1) do |observer|
+          yield(observable, observer)
+        end if conditions(observable, uniq_observer)
       end
     end
   end

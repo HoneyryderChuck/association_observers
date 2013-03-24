@@ -8,12 +8,10 @@ module AssociationObservers
         klass.all(attributes)
       end
 
-      def self.get_field(klass, attrs={})
-        klass.all(attrs)
-      end
-
-      def self.check_new_record_method
-        :new?
+      def self.get_field(collection, attrs={})
+        collection.is_a?(::DataMapper::Associations::Relationship) ?
+        collection.all(attrs) :
+        super
       end
 
       def self.fetch_model_from_collection
@@ -35,7 +33,9 @@ module AssociationObservers
       end
 
       def self.batched_each(collection, batch, &block)
-        collection.each(&block) # datamapper batches already by 500 https://groups.google.com/forum/?fromgroups=#!searchin/datamapper/batches/datamapper/lAZWFN4TWAA/G1Gu-ams_QMJ
+        collection.is_a?(::DataMapper::Associations::Relationship) ?
+        collection.each(&block) : # datamapper batches already by 500 https://groups.google.com/forum/?fromgroups=#!searchin/datamapper/batches/datamapper/lAZWFN4TWAA/G1Gu-ams_QMJ
+        super
       end
 
       def self.validate_parameters(observer, observable_associations, notifier_names, callbacks)

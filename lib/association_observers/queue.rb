@@ -17,7 +17,7 @@ module AssociationObservers
 
     def enqueue_notifications(callback, observers, klass, batch_size, &action)
       if callback.eql?(:destroy)
-        orm_adapter.batched_each(observers, batch_size, &action)
+        AssociationObservers::orm_adapter.batched_each(observers, batch_size, &action)
       else
         # define method in queue which delegates to the passed action
         action_copy = action.dup

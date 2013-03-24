@@ -8,14 +8,8 @@ module AssociationObservers
         raise "should be defined in an adapter for the used ORM"
       end
 
-      def self.get_field(klass_or_relation, attrs)
-        raise "should be defined in an adapter for the used ORM"
-      end
-
-      # @abstract
-      # @return [Symbol] ORM instance method name which checks whether the record is a new instance
-      def self.check_new_record_method
-        raise "should be defined in an adapter for the used ORM"
+      def self.get_field(collection, attrs)
+        attrs[:offset] == 0 ? collection.map{|elem| elem.send(*attrs[:fields])} : []
       end
 
       # @abstract
@@ -24,10 +18,11 @@ module AssociationObservers
         raise "should be defined in an adapter for the used ORM"
       end
 
-      # @abstract
       # implementation of an ORM-specifc batched each enumerator on a collection
-      def self.batched_each(collection, batch, &block)
-        raise "should be defined in an adapter for the used ORM"
+      def self.batched_each(collection, batch=1, &block)
+        batch > 1 ?
+        collection.each_slice(batch) { |batch| batch.each(&block) } :
+        collection.each(&block)
       end
 
       # @abstract
