@@ -35,7 +35,7 @@ module AssociationObservers
   end
 
   def self.queue
-    @queue ||= AssociationObservers::Queue.instance
+    @queue ||= Queue.instance
   end
 
   @options = {
