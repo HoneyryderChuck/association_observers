@@ -227,14 +227,14 @@ module AssociationObservers
 end
 
 if defined?(Rails::Railtie) # RAILS
-  require 'association_observers/railtie'
+  require 'association_observers/initializers/railtie'
 else
   # ORM Adapters
   require 'association_observers/active_record' if defined?(ActiveRecord)
   require 'association_observers/data_mapper' if defined?(DataMapper)
 
   # Background Processing Queue Adapters
-  require 'association_observers/delayed_job' if defined?(Delayed)
-  require 'association_observers/resque' if defined?(Resque)
-  require 'association_observers/sidekiq' if defined?(Sidekiq)
+  require 'association_observers/initializers/delayed_job' if defined?(Delayed)
+  require 'association_observers/initializers/resque' if defined?(Resque)
+  require 'association_observers/initializers/sidekiq' if defined?(Sidekiq)
 end
