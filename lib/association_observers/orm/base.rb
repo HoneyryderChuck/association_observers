@@ -14,7 +14,7 @@ module AssociationObservers
 
       # @abstract
       # @return [Symbol] ORM collection method name to get the model of its children
-      def self.fetch_model_from_collection
+      def self.collection_class(collection)
         raise "should be defined in an adapter for the used ORM"
       end
 

@@ -14,13 +14,13 @@ module AssociationObservers
         super
       end
 
-      def self.fetch_model_from_collection
-        :klass
+      def self.collection_class(collection)
+        collection.klass
       end
 
-        def self.class_variable_set(klass, name)
-          klass.cattr_accessor name
-        end
+      def self.class_variable_set(klass, name)
+        klass.cattr_accessor name
+      end
 
       def self.batched_each(collection, batch, &block)
         if collection.is_a?(::ActiveRecord::Relation) ?

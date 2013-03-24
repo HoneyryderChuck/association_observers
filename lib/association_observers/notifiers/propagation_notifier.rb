@@ -5,7 +5,7 @@
 class PropagationNotifier < Notifier::Base
 
   def conditions(observable, observer) ; observer.observable? ; end
-  def conditions_many(observable, observers) ; observers.send(AssociationObservers::orm_adapter.fetch_model_from_collection).observable? ; end
+  def conditions_many(observable, observers) ; AssociationObservers::orm_adapter.collection_class(observers).observable? ; end
 
   # propagates the message to the observer's observer if the
   # observer is indeed observed by any entity

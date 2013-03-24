@@ -14,8 +14,8 @@ module AssociationObservers
         super
       end
 
-      def self.fetch_model_from_collection
-        :model
+      def self.collection_class(collection)
+        collection.model
       end
 
       def self.class_variable_set(klass, name)
