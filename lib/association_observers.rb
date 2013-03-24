@@ -39,7 +39,8 @@ module AssociationObservers
   end
 
   @options = {
-      batch_size: 50
+      batch_size: 50,
+      queue: "observers"
   }
 
   def self.default_options
@@ -67,7 +68,6 @@ module AssociationObservers
         raise "AssociationObservers: it must be an integer value" unless val.is_a?(Fixnum)
         self.observable_options[:batch_size] = val
       end
-
 
       private
 
