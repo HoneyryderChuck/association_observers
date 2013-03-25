@@ -9,7 +9,7 @@ module AssociationObservers
       end
 
       def self.get_field(collection, attrs={})
-        collection.is_a?(::DataMapper::Associations::Relationship) ?
+        collection.is_a?(::DataMapper::Collection) ?
         collection.all(attrs) :
         super
       end
@@ -33,7 +33,7 @@ module AssociationObservers
       end
 
       def self.batched_each(collection, batch, &block)
-        collection.is_a?(::DataMapper::Associations::Relationship) ?
+        collection.is_a?(::DataMapper::Collection) ?
         collection.each(&block) : # datamapper batches already by 500 https://groups.google.com/forum/?fromgroups=#!searchin/datamapper/batches/datamapper/lAZWFN4TWAA/G1Gu-ams_QMJ
         super
       end
