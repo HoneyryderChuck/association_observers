@@ -22,12 +22,12 @@ module AssociationObservers
         # define method in queue which delegates to the passed action
         action_copy = action.dup
         proxy_method_name = :"_aux_action_proxy_method_#{action_copy.object_id}_"
-        register_auxiliary_method(proxy_method_name, lambda { action_copy} )
+        register_auxiliary_method(proxy_method_name, lambda { action_copy } )
 
         # create workers
         i = 0
         loop do
-          ids = AssociationObservers::orm_adapter.get_field(observers, :fields => [:id], :limit => batch_size, :offset => i*batch_size)
+          ids = AssociationObservers::orm_adapter.get_field(observers, :fields => [:id], :limit => batch_size, :offset => i*batch_size).compact
           break if ids.empty?
           enqueue(Workers::ManyDelayedNotification, ids, klass.name, proxy_method_name)
           i += 1
