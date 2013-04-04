@@ -8,7 +8,7 @@ end
 group :test do
   gem "delayed_job_active_record", :require => false
   gem "resque",                    :require => false
-  gem "sidekiq",                   :require => false
+  gem "sidekiq",                   :require => false unless RUBY_VERSION == "1.8.7"
 end
 
 gem 'activerecord'
