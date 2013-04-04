@@ -27,7 +27,6 @@ require "active_support/core_ext/string/inflections"
 module AssociationObservers
   autoload :Queue, "association_observers/queue"
   module Workers
-    autoload :Base, "association_observers/workers/base"
     autoload :ManyDelayedNotification, "association_observers/workers/many_delayed_notification"
   end
 
@@ -41,9 +40,12 @@ module AssociationObservers
 
   @options = {
       :batch_size => 50,
-      :queue_engine => nil,
-      :queue => "observers",
-      :queue_drb_location => "druby://localhost:8787"
+      :queue => {
+        :engine => nil,
+        :name => "observers",
+        :drb_location => "druby://localhost:8787",
+        :priority => nil
+      }
   }
 
   def self.options

@@ -13,9 +13,9 @@ module AssociationObservers
 
     # it checks whether there is a queue already registered in the DRb space. If so, use it. if not, create and register
     def initialize
-      existing_queue = DRbObject.new_with_uri(AssociationObservers::options[:queue_drb_location])
+      existing_queue = DRbObject.new_with_uri(AssociationObservers::options[:queue][:drb_location])
       unless existing_queue.nil?
-        DRb.start_service(AssociationObservers::options[:queue_drb_location], self)
+        DRb.start_service(AssociationObservers::options[:queue][:drb_location], self)
         super
       else
         existing_queue
@@ -71,11 +71,8 @@ module AssociationObservers
       #if AssociationObservers::options[:queue_engine]
       #
       #end
-      AssociationObservers::options[:queue_engine] = engine
+      AssociationObservers::options[:queue][:engine] = engine
       require "association_observers/extensions/#{engine}"
-      AssociationObservers::Queue.send(:include, AssociationObservers.const_get("#{engine.to_s.classify}QueueExtensions"))
-      AssociationObservers::Queue.send(:include, AssociationObservers.const_get("#{engine.to_s.classify}WorkerExtensions"))
-
     end
 
     private

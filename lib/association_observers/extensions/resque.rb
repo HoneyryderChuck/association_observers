@@ -1,23 +1,17 @@
 # -*- encoding : utf-8 -*-
 
 module AssociationObservers
-  module ResqueWorkerExtensions
-    def self.included(base)
-      base.class_eval do
-        @queue = AssociationObservers::options[:queue].to_sym
-      end
-      extend ClassMethods
-    end
+  module Workers
+    class ManyDelayedNotification
+      @queue = AssociationObservers::options[:queue][:name].to_sym
 
-    module ClassMethods
-
-      def perform(*args)
+      def self.perform(*args)
         self.new(*args).perform
       end
     end
   end
 
-  module ResqueQueueExtensions
+  class Queue
     private
 
     def enqueue(task, *args)

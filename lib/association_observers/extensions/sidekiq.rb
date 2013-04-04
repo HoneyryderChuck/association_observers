@@ -1,25 +1,25 @@
 # -*- encoding : utf-8 -*-
 module AssociationObservers
-  module SidekiqWorkerExtensions
+  module Workers
+    class ManyDelayedNotification
+      include Sidekiq::Worker
 
-    def self.included(base)
-      base.send :include, Sidekiq::Worker
-      base.class_eval do
-        alias :perform_action! :perform
+      sidekiq_options :queue => AssociationObservers::options[:queue][:name].to_sym
+
+      alias :perform_action! :perform
+
+      def initialize ; ; end
+
+      def perform(observer_ids, klass, proxy_method_name)
+        @observer_ids = observer_ids
+        @klass = klass
+        @proxy_method_name = proxy_method_name
+        perform_action!
       end
-    end
-
-    def initialize ; ; end
-
-    def perform(observer_ids, klass, proxy_method_name)
-      @observer_ids = observer_ids
-      @klass = klass
-      @proxy_method_name = proxy_method_name
-      perform_action!
     end
   end
 
-  module SidekiqQueueExtensions
+  class Queue
     private
 
     def enqueue(task, *args)

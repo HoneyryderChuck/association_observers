@@ -1,7 +1,7 @@
 # -*- encoding : utf-8 -*-
 module AssociationObservers
   module Workers
-    class ManyDelayedNotification < Base
+    class ManyDelayedNotification
 
       attr_reader :observer_ids, :klass, :proxy_method_name
 
@@ -23,7 +23,7 @@ module AssociationObservers
       private
 
       def remote_queue
-        DRbObject.new_with_uri(AssociationObservers::options[:queue_drb_location])
+        DRbObject.new_with_uri(AssociationObservers::options[:queue][:drb_location])
       end
 
     end
