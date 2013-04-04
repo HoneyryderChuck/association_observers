@@ -2,6 +2,7 @@
 require "logger"
 require "delayed_job_active_record"
 
+FileUtils.mkdir_p("log")
 Delayed::Worker.logger = Logger.new(File.new("log/delayed.log", "w"))
 
 Delayed::Worker.delay_jobs = false
