@@ -65,13 +65,19 @@ module AssociationObservers
 
 
     def engine=(engine)
+      AssociationObservers::options[:queue][:engine] = engine
+      initialize_queue_engine
+    end
+
+    def initialize_queue_engine
+      engine = AssociationObservers::options[:queue][:engine]
+      return if engine.nil?
       raise "#{engine}: unsupported engine" unless %w(delayed_job resque sidekiq).include?(engine.to_s)
       # first, remove stuff from previous engine
       # TODO: can une exclude modules???
       #if AssociationObservers::options[:queue_engine]
       #
       #end
-      AssociationObservers::options[:queue][:engine] = engine
       require "association_observers/extensions/#{engine}"
     end
 
