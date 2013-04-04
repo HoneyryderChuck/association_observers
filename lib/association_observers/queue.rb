@@ -20,14 +20,13 @@ module AssociationObservers
       if callback.eql?(:destroy)
         AssociationObservers::orm_adapter.batched_each(observers, batch_size, &action)
       else
-        # define method in queue which delegates to the passed action
-        action_copy = action.dup
-        proxy_method_name = :"_aux_action_proxy_method_#{action_copy.object_id}_"
-        register_auxiliary_method(proxy_method_name, lambda { action_copy } )
-
         # create workers
         i = 0
         loop do
+          # define method in queue which delegates to the passed action
+          action_copy = action.dup
+          proxy_method_name = :"_aux_action_proxy_method_#{action_copy.object_id}_"
+          register_auxiliary_method(proxy_method_name, lambda { action_copy } )
           ids = AssociationObservers::orm_adapter.get_field(observers, :fields => [:id], :limit => batch_size, :offset => i*batch_size).compact
           break if ids.empty?
           enqueue(Workers::ManyDelayedNotification, ids, klass.name, proxy_method_name)
