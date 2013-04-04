@@ -207,8 +207,8 @@ if in Rails, you can do it in application.rb:
          end
        end
 
-and that's it. Why is this important? The notification of observer collections, when you don't rewrite the
-#notify_many hook method of the notifier, takes the following approach:
+and that's it. Why is this important? The notification of observer collections, when you don't rewrite the #notify_many hook
+method of the notifier, takes the following approach:
 
 * Queries the collection in batches (of 50, by default)
 * Iterates over each batch
