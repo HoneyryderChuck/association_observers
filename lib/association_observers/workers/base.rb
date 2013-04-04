@@ -2,9 +2,12 @@
 module AssociationObservers
   module Workers
     class Base
+
       def perform
-        raise "should be overwritten by subclasses"
+        raise "should be overwritten"
       end
+
     end
   end
+
 end

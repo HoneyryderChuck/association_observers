@@ -1,7 +1,7 @@
 # -*- encoding : utf-8 -*-
 module AssociationObservers
   module Workers
-    class ManyDelayedNotification
+    class ManyDelayedNotification < Base
 
       attr_reader :observer_ids, :klass, :proxy_method_name
 

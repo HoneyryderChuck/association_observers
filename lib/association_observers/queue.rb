@@ -63,6 +63,21 @@ module AssociationObservers
       self.class.send :undef_method, method
     end
 
+
+    def engine=(engine)
+      raise "#{engine}: unsupported engine" unless %w(delayed_job resque sidekiq).include?(engine.to_s)
+      # first, remove stuff from previous engine
+      # TODO: can une exclude modules???
+      #if AssociationObservers::options[:queue_engine]
+      #
+      #end
+      AssociationObservers::options[:queue_engine] = engine
+      require "association_observers/extensions/#{engine}"
+      AssociationObservers::Queue.send(:include, AssociationObservers.const_get("#{engine.to_s.classify}QueueExtensions"))
+      AssociationObservers::Queue.send(:include, AssociationObservers.const_get("#{engine.to_s.classify}WorkerExtensions"))
+
+    end
+
     private
 
     # enqueues the task with the given arguments to be processed asynchronously

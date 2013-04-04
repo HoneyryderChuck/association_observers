@@ -27,6 +27,7 @@ require "active_support/core_ext/string/inflections"
 module AssociationObservers
   autoload :Queue, "association_observers/queue"
   module Workers
+    autoload :Base, "association_observers/workers/base"
     autoload :ManyDelayedNotification, "association_observers/workers/many_delayed_notification"
   end
 
@@ -40,6 +41,7 @@ module AssociationObservers
 
   @options = {
       :batch_size => 50,
+      :queue_engine => nil,
       :queue => "observers",
       :queue_drb_location => "druby://localhost:8787"
   }
@@ -59,7 +61,7 @@ module AssociationObservers
     def self.included(base)
       base.extend(ClassMethods)
       AssociationObservers::orm_adapter.class_variable_set(base, :observable_options)
-      base.observable_options = AssociationObservers::options
+      base.observable_options = AssociationObservers::options.select{|k, v| [:batch_size].include?(k) }
     end
 
     module ClassMethods
@@ -68,14 +70,6 @@ module AssociationObservers
       def batch_size=(val)
         raise "AssociationObservers: it must be an integer value" unless val.is_a?(Fixnum)
         self.observable_options[:batch_size] = val
-      end
-
-      def queue_drb_location=(location)
-        self.observable_options[:queue_drb_location] = location
-      end
-
-      def queue=(name)
-        self.observable_options[:queue] = name
       end
 
       private
@@ -238,14 +232,10 @@ module AssociationObservers
 end
 
 if defined?(Rails::Railtie) # RAILS
-  require 'association_observers/initializers/railtie'
+  require 'association_observers/railtie'
 else
   # ORM Adapters
   require 'association_observers/active_record' if defined?(ActiveRecord)
   require 'association_observers/data_mapper' if defined?(DataMapper)
 
-  # Background Processing Queue Adapters
-  require 'association_observers/initializers/delayed_job' if defined?(Delayed)
-  require 'association_observers/initializers/resque' if defined?(Resque)
-  require 'association_observers/initializers/sidekiq' if defined?(Sidekiq)
 end

@@ -1,7 +1,10 @@
 # -*- encoding : utf-8 -*-
 
 module AssociationObservers
-  class Queue
+  module DelayedJobWorkerExtensions
+
+  end
+  module DelayedJobQueueExtensions
     private
 
     def enqueue(task, *args)
