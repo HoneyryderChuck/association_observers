@@ -150,7 +150,9 @@ module AssociationObservers
       end
     end
 
+    # blocks the observable behaviour
     def unobservable! ; @unobservable = true ; end
+    # unblocks the observable behaviour
     def observable! ; @unobservable = false ; end
 
     private

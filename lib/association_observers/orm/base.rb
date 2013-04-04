@@ -2,23 +2,33 @@
 module AssociationObservers
   module Orm
     class Base
+      # finds all records which match the given attributes
       # @abstract
+      #
+      # @param [Class] klass the class of the records to look for
+      # @param [Hash] attributes list of key/value associations which have to be matched by the found records
       # @return [Symbol] ORM class method that fetches records from the DB
       def self.find_all(klass, attributes)
         raise "should be defined in an adapter for the used ORM"
       end
 
+      # @param [Array] collection records to iterate through
+      # @param [Array] attrs attributes to fetch for
+      # @return [Array] a collection of the corresponding values to the given keys for each record
       def self.get_field(collection, attrs)
         attrs[:offset] == 0 ? collection.map{|elem| elem.send(*attrs[:fields])} : []
       end
 
       # @abstract
+      # @param [Array] collection objects container
       # @return [Symbol] ORM collection method name to get the model of its children
       def self.collection_class(collection)
         raise "should be defined in an adapter for the used ORM"
       end
 
-      # implementation of an ORM-specifc batched each enumerator on a collection
+      # implementation of a batched each enumerator on a collection
+      #
+      # @param [Array] collection records to batch through
       def self.batched_each(collection, batch=1, &block)
         batch > 1 ?
         collection.each_slice(batch) { |batch| batch.each(&block) } :

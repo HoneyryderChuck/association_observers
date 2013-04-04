@@ -58,8 +58,7 @@ module Notifier
     # @param [Array[ActiveRecord::Relation]] many_observers the observers which will be notified; each element represents a one-to-many relation
     def notify_many(observable, many_observers)
       many_observers.each do |observers|
-        observers_klass = AssociationObservers::orm_adapter.collection_class(observers)
-        AssociationObservers::queue.enqueue_notifications(@callback, observers, observers_klass, observers_klass.observable_options[:batch_size]) do |observer|
+        AssociationObservers::queue.enqueue_notifications(@callback, observers) do |observer|
           yield(observable, observer) if conditions(observable, observer)
         end if conditions_many(observable, observers)
       end
@@ -71,7 +70,7 @@ module Notifier
     # @param [Array[Object]] observers the observers which will be notified; each element represents a one-to-one association
     def notify_ones(observable, observers)
       observers.each do |uniq_observer|
-        AssociationObservers::queue.enqueue_notifications(@callback, [uniq_observer], uniq_observer.class, 1) do |observer|
+        AssociationObservers::queue.enqueue_notifications(@callback, [uniq_observer], :batch_size => 1, :klass => uniq_observer.class) do |observer|
           yield(observable, observer)
         end if conditions(observable, uniq_observer)
       end
