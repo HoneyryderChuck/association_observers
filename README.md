@@ -169,7 +169,7 @@ The #observes method for the models accepts as argument the association being ob
 
 The other important task is to define your own notifiers. First, where. For Rails, the gem expects a "notifiers" folder to exist under the "app" folder.
 Everywhere else, it's entirely up to you where you should define them.
-Second, how. Your notifier must inherit from Notifier::Base. This class provides you with an API you should define your way:
+Second, how. Your notifier must inherit from Notifier::Base. This class provides you with hook methods you should/could redefine your way:
 
 Methods to overwrite:
 * action(observable, observer) : where you should define the behaviour which results of the observation of an event
@@ -190,10 +190,52 @@ Purpose of the Notifier is to abstract the behaviour from the Observer relations
 need to complement/overwrite behaviour from your observer/observable models, you can write it in notifier-specific modules,
 the ObserverMethods and the ObservableMethods, which will be included in the respective models.
 
+### Background Queues
+
+This gem supports the 3 most popular background queue implementations around: Delayed Job, Resque and Sidekiq. If you are
+using this gem out of Rails, you can do:
+
+       AssociationObservers::options[:queue][:engine] = :delayed_job # or :sidekiq, or :resque
+
+if in Rails, you can do it in application.rb:
+
+       module YourApp
+         class Application < Rails::Application
+           ...
+           config.association_observers.queue.engine = :delayed_job # or :sidekiq, or :resque
+           ...
+         end
+       end
+
+and that's it. Why is this important? The notification of observer collections, when you don't rewrite the
+#notify_many hook method of the notifier, takes the following approach:
+
+* Queries the collection in batches (of 50, by default)
+* Iterates over each batch
+* Performs the #update hook method on each
+
+It also takes this approach to the propagation. Batch-querying is much better than querying all at once, but you still
+load everything and perform the various iterations synchronously. If you already use one of the aforementioned background
+queues, each batch will generate a job which will be handled asynchronously. You also have the control over the batch size.
+If you want to set a new default batch size, just:
+
+       # standard
+       AssociationObservers::options[:batch_size] = 200 # or 20...
+
+       # rails way
+       module YourApp
+         class Application < Rails::Application
+           ...
+           config.association_observers.batch_size = 200 # or 20...
+           ...
+         end
+       end
+
+You can also set the queue name (default: "observers" and priority (if using delayed job) on the options, they are just another option under queue.
+
 ### TODOs
 
 * Support for other ORM's (currently supporting ActiveRecord and DataMapper)
-* Support for other Message Queue libraries (only supporting DelayedJob, rescue, everything that "#delay"s)
 * Action routine definition on the "#observes" declaration (sometimes one does not need the overhead of writing a notifier)
 * Overall spec readability
 
@@ -204,6 +246,8 @@ the ObserverMethods and the ObservableMethods, which will be included in the res
 
 * Support for ActiveRecord
 * Support for DataMapper
+
+* Integration with delayed job, resque and sidekiq
 
 ### Rails
 
