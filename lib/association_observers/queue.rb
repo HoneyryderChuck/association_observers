@@ -7,8 +7,13 @@ module AssociationObservers
     include Singleton
 
     def initialize
-      DRb.start_service(drb_uri, self)
-      super
+      existing_queue = DRbObject.new_with_uri(self.drb_uri)
+      unless existing_queue.nil?
+        DRb.start_service(drb_uri, self)
+        super
+      else
+        existing_queue
+      end
     end
 
     def drb_uri
