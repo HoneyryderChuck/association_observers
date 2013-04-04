@@ -160,7 +160,7 @@ module AssociationObservers
     # informs the observers that something happened on this observable, passing all the observers to it
     # @param [Symbol] callback key of the callback being notified; only the observers for this callback will be run
     def notify! callback
-      notify_observers(callback) unless @unobservable
+      notify_observers([callback, []]) unless @unobservable
     end
   end
 
@@ -209,7 +209,7 @@ module AssociationObservers
       end
 
       # 1: for each observed association, define behaviour
-      get_association_options_pairs(args).each do |klass, options|
+      get_association_options_pairs(args).each do |name, klass, options|
         klass.instance_eval do
 
           include IsObservableMethods
@@ -219,7 +219,7 @@ module AssociationObservers
           attr_reader :unobservable
 
           # load observers from this observable association
-          set_observers(notifier_classes, observer_callbacks, observer_class, (options[:as] || association_name).to_s)
+          set_observers(notifier_classes, observer_callbacks, observer_class, (options[:as] || association_name).to_s, name)
 
           # sets the callbacks to inform observers
           set_notification_on_callbacks(observer_callbacks)

@@ -28,13 +28,20 @@ if defined?(ActiveRecord)
 
         private
 
-        def set_observers(notifiers, callbacks, observer_class, association_name)
+        # given the fetched information, it initializes the notifiers
+        # @param [Array] notifiers notifiers for the current class
+        # @param [Array] callbacks valid callbacks for the notifiers
+        # @param [Class] observer_class the class of the observer
+        # @param [Symbol] association_name the observer identifier on the observable
+        def set_observers(notifiers, callbacks, observer_class, association_name, observable_association_name)
           notifiers.each do |notifier|
             callbacks.each do |callback|
               options = {}
               observer_association = self.reflect_on_association(association_name.to_sym) ||
                                      self.reflect_on_association(association_name.pluralize.to_sym)
               options[:observer_class] = observer_class.base_class if observer_association.options[:polymorphic]
+
+              options[:observable_association_name] = observable_association_name
 
               self.add_observer notifier.new(callback, observer_association.name, options)
               include "#{notifier.name}::ObservableMethods".constantize if notifier.constants.map(&:to_sym).include?(:ObservableMethods)
@@ -66,7 +73,7 @@ if defined?(ActiveRecord)
         private
 
         def get_association_options_pairs(association_names)
-          reflect_on_all_associations.select{ |r| association_names.include?(r.name) }.map{|r| [r.klass, r.options] }
+          reflect_on_all_associations.select{ |r| association_names.include?(r.name) }.map{|r| [r.name, r.klass, r.options] }
         end
 
         def filter_collection_associations(associations)

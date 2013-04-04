@@ -17,11 +17,14 @@ module Notifier
     # implemented as a filter where it is seen if the triggered callback corresponds to the callback this observer
     # responds to
     #
-    # @param [Symbol] callback key from the callback that has just been triggered
+    # @param [Array] args [callback: key from the callback that has just been triggered, to_exclude: list of associations to exclude from the notifying chain]
     # @param [Object] observable the object which triggered the callback
-    def update(callback, observable)
-      return unless callback == @callback
-      observers = @options.has_key?(:observer_class) ? self.observers.select{|assoc| observable.association(assoc).klass == @options[:observer_class] } : self.observers
+    def update(args, observable)
+      callback, to_exclude = args
+      return unless accepted_callback?(callback)
+      observers = self.observers
+      observers = observers.reject{|assoc| to_exclude.include?(assoc) }
+      observers = observers.select{|assoc| observable.association(assoc).klass == @options[:observer_class] } if @options.has_key?(:observer_class)
       notify(observable, observers.map{|assoc| observable.send(assoc)}.compact)
     end
 
@@ -38,6 +41,14 @@ module Notifier
 
 
     private
+
+    def accepted_callback?(callback)
+      case @callback
+        when :save then [:create, :update, :save].include?(callback)
+        when :update then [:update, :save].include?(callback)
+        else callback == @callback
+      end
+    end
 
     # Notifies all observers; filters the observers into two groups: one-to-many and one-to-one collections
     # @param [Object] observable the object which is notifying

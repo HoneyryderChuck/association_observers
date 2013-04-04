@@ -10,7 +10,7 @@ class PropagationNotifier < Notifier::Base
   # propagates the message to the observer's observer if the
   # observer is indeed observed by any entity
   def action(observable, observer, callback=@callback)
-    observer.send(:notify_observers, callback)
+    observer.send(:notify_observers, [callback, [@options[:observable_association_name] ] ])
   end
 
 end

@@ -21,12 +21,15 @@ if defined?(DataMapper)
         end
         private
 
-        def set_observers(ntfs, callbacks, observer_class, association_name)
+        def set_observers(ntfs, callbacks, observer_class, association_name, observable_association_name)
           ntfs.each do |notifier|
             callbacks.each do |callback|
               options = {} # todo: use this for polymorphics
               observer_association = self.relationships[association_name]||
                                      self.relationships[association_name.pluralize]
+
+              options[:observable_association_name] = observable_association_name
+
               notifiers << notifier.new(callback, observer_association.name, options)
               include "#{notifier.name}::ObservableMethods".constantize if notifier.constants.map(&:to_sym).include?(:ObservableMethods)
             end
@@ -49,8 +52,8 @@ if defined?(DataMapper)
         private
 
 
-        def notify_observers(callback)
-          self.class.notifiers.each{|notifier| notifier.update(callback, self)}
+        def notify_observers(args)
+          self.class.notifiers.each{|notifier| notifier.update(args, self)}
         end
       end
     end
@@ -67,7 +70,7 @@ if defined?(DataMapper)
 
         def get_association_options_pairs(association_names)
           # TODO: find better way to figure out the class of the relationship entity
-          relationships.select{|r|association_names.include?(r.name)}.map{|r| [(r.is_a?(DataMapper::Associations::ManyToOne::Relationship) ? r.parent_model : r.child_model), r.options] }
+          relationships.select{|r|association_names.include?(r.name)}.map{|r| [r.name, (r.is_a?(DataMapper::Associations::ManyToOne::Relationship) ? r.parent_model : r.child_model), r.options] }
         end
 
         def filter_collection_associations(associations)
