@@ -39,11 +39,12 @@ module AssociationObservers
   end
 
   @options = {
-      batch_size: 50,
-      queue: "observers"
+      :batch_size => 50,
+      :queue => "observers",
+      :queue_drb_location => "druby://localhost:8787"
   }
 
-  def self.default_options
+  def self.options
     @options
   end
 
@@ -58,7 +59,7 @@ module AssociationObservers
     def self.included(base)
       base.extend(ClassMethods)
       AssociationObservers::orm_adapter.class_variable_set(base, :observable_options)
-      base.observable_options = AssociationObservers::default_options
+      base.observable_options = AssociationObservers::options
     end
 
     module ClassMethods
@@ -67,6 +68,14 @@ module AssociationObservers
       def batch_size=(val)
         raise "AssociationObservers: it must be an integer value" unless val.is_a?(Fixnum)
         self.observable_options[:batch_size] = val
+      end
+
+      def queue_drb_location=(location)
+        self.observable_options[:queue_drb_location] = location
+      end
+
+      def queue=(name)
+        self.observable_options[:queue] = name
       end
 
       private

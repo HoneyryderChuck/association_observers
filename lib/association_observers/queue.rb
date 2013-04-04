@@ -7,17 +7,13 @@ module AssociationObservers
     include Singleton
 
     def initialize
-      existing_queue = DRbObject.new_with_uri(self.drb_uri)
+      existing_queue = DRbObject.new_with_uri(AssociationObservers::options[:queue_drb_location])
       unless existing_queue.nil?
-        DRb.start_service(drb_uri, self)
+        DRb.start_service(AssociationObservers::options[:queue_drb_location], self)
         super
       else
         existing_queue
       end
-    end
-
-    def drb_uri
-      "druby://localhost:8787"
     end
 
     def enqueue_notifications(callback, observers, klass, batch_size, &action)

@@ -4,7 +4,7 @@ module AssociationObservers
   module Workers
 
     class ManyDelayedNotification
-      @queue = AssociationObservers::default_options[:queue].to_sym
+      @queue = AssociationObservers::options[:queue].to_sym
 
       def self.perform(*args)
         self.new(*args).perform
