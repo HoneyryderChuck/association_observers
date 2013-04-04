@@ -63,7 +63,11 @@ module AssociationObservers
     def self.included(base)
       base.extend(ClassMethods)
       AssociationObservers::orm_adapter.class_variable_set(base, :observable_options)
-      base.observable_options = AssociationObservers::options.select{|k, v| [:batch_size].include?(k) }
+      if RUBY_VERSION < "1.9"
+        base.observable_options = AssociationObservers::Backports.hash_select(AssociationObservers::options){|k, v| [:batch_size].include?(k) }
+      else
+        base.observable_options = AssociationObservers::options.select{|k, v| [:batch_size].include?(k) }
+      end
     end
 
     module ClassMethods
