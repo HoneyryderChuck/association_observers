@@ -14,17 +14,11 @@ module AssociationObservers
       def perform
         observers = AssociationObservers::orm_adapter.find_all(@klass.constantize, :id => @observer_ids)
 
-        observers.each(&remote_queue.send(@proxy_method_name))
+        observers.each(&AssociationObservers::queue.send(@proxy_method_name))
         # after we are down, we are going to delete the proxy method name
-        remote_queue.send :unregister_auxiliary_method, @proxy_method_name
+        AssociationObservers::queue.send :unregister_auxiliary_method, @proxy_method_name
       end
 
-
-      private
-
-      def remote_queue
-        DRbObject.new_with_uri(AssociationObservers::options[:queue][:drb_location])
-      end
 
     end
   end
