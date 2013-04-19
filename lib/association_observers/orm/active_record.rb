@@ -15,8 +15,8 @@ module AssociationObservers
 
       # @see AssociationObservers::Orm::Base.get_field
       def self.get_field(collection, attrs={})
-        collection.is_a?(::ActiveRecord::Relation) ?
-        collection.limit(attrs[:limit]).offset(attrs[:offset]).pluck(*attrs[:fields]) :
+        collection.is_a?(::ActiveRecord::Relation) or collection.respond_to?(:proxy_association) ?
+        collection.limit(attrs[:limit]).offset(attrs[:offset]).pluck(*attrs[:fields].map{|attr| "#{collection_class(collection).arel_table.name}.#{attr}" }) :
         super
       end
 
