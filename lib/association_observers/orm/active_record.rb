@@ -4,6 +4,9 @@ require "association_observers/orm/base"
 module AssociationObservers
   module Orm
     class ActiveRecord < Base
+      def self.find(klass, primary_key)
+        klass.find_by_id(primary_key)
+      end
 
       # @see AssociationObservers::Orm::Base.find_all
       def self.find_all(klass, attributes)

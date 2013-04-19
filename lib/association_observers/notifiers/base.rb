@@ -2,14 +2,19 @@
 module Notifier
   class Base
     attr_reader :callback, :observers, :options
-    # @param [Symbol] callback callback key to which this observer will respond (:create, :update, :save, :destroy)
-    # @param [Array] observers list of observers asssociations in the symbolized-underscored form (SimpleAssociation => :simple_association)
-    # @param [Hash] options additional options for the notifier
-    # @option options [Class] :observer_class the class of the observer (important when the observer association is polymorphic)
-    def initialize(callback, observers, options = {})
-      @callback = callback
-      @observers = Array(observers)
-      @options = options
+    # @overload initialize(callback, observers, options)
+    #   Initializes a usable notifier
+    #   @param [Symbol] callback callback key to which this observer will respond (:create, :update, :save, :destroy)
+    #   @param [Array] observers list of observers asssociations in the symbolized-underscored form (SimpleAssociation => :simple_association)
+    #   @param [Hash] options additional options for the notifier
+    #   @option options [Class] :observer_class the class of the observer (important when the observer association is polymorphic)
+    # @overload initialize
+    #   Initializes a ghost notifier for idempotent method extraction purposes
+    def initialize(*args)
+      @options = args.extract_options!
+      raise "something is wrong, the notifiers was wrongly initialized" unless args.size == 0 or args.size == 2
+      @callback, @observers = args
+      @observers = Array(@observers)
     end
 
 
@@ -68,9 +73,7 @@ module Notifier
     # @param [Array[ActiveRecord::Relation]] many_observers the observers which will be notified; each element represents a one-to-many relation
     def notify_many(observable, many_observers)
       many_observers.each do |observers|
-        AssociationObservers::queue.enqueue_notifications(@callback, observers) do |observer|
-          action(observable, observer) if conditions(observable, observer)
-        end if conditions_many(observable, observers)
+        AssociationObservers::queue.enqueue_notifications(observers, observable, self) if conditions_many(observable, observers)
       end
     end
 
@@ -80,10 +83,14 @@ module Notifier
     # @param [Array[Object]] observers the observers which will be notified; each element represents a one-to-one association
     def notify_ones(observable, observers)
       observers.each do |uniq_observer|
-        AssociationObservers::queue.enqueue_notifications(@callback, [uniq_observer], :batch_size => 1, :klass => uniq_observer.class) do |observer|
-          action(observable, observer) if conditions(observable, uniq_observer)
-        end
+        AssociationObservers::queue.enqueue_notifications([uniq_observer], observable, self,
+                                                          :batch_size => 1, :klass => uniq_observer.class)
       end
     end
+
+    def conditional_action(observable, observer)
+      action(observable, observer) if conditions(observable, observer)
+    end
+
   end
 end

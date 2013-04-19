@@ -7,13 +7,14 @@ module AssociationObservers
       sidekiq_options :queue => AssociationObservers::options[:queue][:name].to_sym
 
       alias :perform_action! :perform
+      alias :standard_initialize :initialize
 
       def initialize ; ; end
 
-      def perform(observer_ids, klass, proxy_method_name)
-        @observer_ids = observer_ids
-        @klass = klass
-        @proxy_method_name = proxy_method_name
+      def perform(*args)
+        standard_initialize(*args)
+        # notifier has been dumped two times, reset it here
+        @notifier = args.last
         perform_action!
       end
     end
@@ -23,7 +24,7 @@ module AssociationObservers
     private
 
     def enqueue(task, *args)
-      task.perform_async(*args)
+      task.perform_async(*args[0..-2] << Marshal.dump(args.last))
     end
   end
 end

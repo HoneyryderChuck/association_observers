@@ -2,6 +2,16 @@
 module AssociationObservers
   module Orm
     class Base
+      # finds record by primary key
+      # @abstract
+      #
+      # @param [Class] klass the class of the record to look for
+      # @param [Object] primary_key primary key of the record to look for
+      # @return [Symbol] ORM class method that fetches records from the DB
+      def self.find(klass, primary_key)
+        raise "should be defined in an adapter for the used ORM"
+      end
+
       # finds all records which match the given attributes
       # @abstract
       #

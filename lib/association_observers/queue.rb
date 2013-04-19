@@ -31,45 +31,28 @@ module AssociationObservers
 
     # encapsulates enqueuing strategy. if the callback is to a destroy action, one cannot afford to enqueue, because the
     # observable will be deleted by then. So, perform destroy notifications synchronously right away. If not, the strategy
-    # for now is get the procedure, register it in the queue, get the object ids it refers to and enqueue this information.
+    # for now is get the object ids and enqueue them with the notifier.
     #
-    # @param [Symbol] callback identifies the type of notification
-    # @param [ActiveRecord:Relation, DataMapper::Relationship] observers whom to execute the procedure for
+    # @param [ActiveRecord:Relation, DataMapper::Relationship] observers to be notified
+    # ªparam [Notifier::Base] notifier encapsulates the notification logic
     # @param [Hash] opts other possible options that can't be inferred from the given arguments
-    def enqueue_notifications(callback, observers, opts={}, &action)
+    def enqueue_notifications(observers, observable, notifier, opts={})
       klass       = opts[:klass]      || AssociationObservers::orm_adapter.collection_class(observers)
       batch_size  = opts[:batch_size] || klass.observable_options[:batch_size]
 
-      if callback.eql?(:destroy)
-        AssociationObservers::orm_adapter.batched_each(observers, batch_size, &action)
+      if notifier.callback.eql?(:destroy)
+        AssociationObservers::orm_adapter.batched_each(observers, batch_size, &notifier.method(:conditional_action).to_proc.curry[observable])
       else
         # create workers
         i = 0
         loop do
-          # define method in queue which delegates to the passed action
-          action_copy = action.dup
-          proxy_method_name = :"_aux_action_proxy_method_#{action_copy.object_id}_"
-          register_auxiliary_method(proxy_method_name, lambda { action_copy } )
           ids = AssociationObservers::orm_adapter.get_field(observers, :fields => [:id], :limit => batch_size, :offset => i*batch_size).compact
           break if ids.empty?
-          enqueue(Workers::ManyDelayedNotification, ids, klass.name, proxy_method_name)
+          enqueue(Workers::ManyDelayedNotification, ids, klass.name, observable.id, observable.class.name, notifier)
           i += 1
         end
       end
     end
-
-    # meta-defines a method which does nothing more than return a proc
-    # unfortunately, this has to be public to be available cross-process
-    def register_auxiliary_method(name, procedure)
-      self.class.send :define_method, name, procedure
-    end
-
-    # undefines a previously added meta-method
-    # unfortunately, this has to be public to be available cross-process
-    def unregister_auxiliary_method(method)
-      self.class.send :undef_method, method
-    end
-
 
     def engine=(engine)
       AssociationObservers::options[:queue][:engine] = engine

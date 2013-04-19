@@ -3,20 +3,21 @@ module AssociationObservers
   module Workers
     class ManyDelayedNotification
 
-      attr_reader :observer_ids, :klass, :proxy_method_name
+      attr_reader :observer_ids, :observer_klass, :observable_id, :observable_klass, :notifier
 
-      def initialize(observer_ids, klass_name, proxy_method_name)
+      def initialize(observer_ids, observer_klass, observable_id, observable_klass, notifier)
         @observer_ids = observer_ids
-        @klass = klass_name
-        @proxy_method_name = proxy_method_name
+        @observer_klass = observer_klass
+        @observable_id = observable_id
+        @observable_klass = observable_klass
+        @notifier = Marshal.dump(notifier)
       end
 
       def perform
-        observers = AssociationObservers::orm_adapter.find_all(@klass.constantize, :id => @observer_ids)
-
-        observers.each(&AssociationObservers::queue.send(@proxy_method_name))
-        # after we are down, we are going to delete the proxy method name
-        AssociationObservers::queue.send :unregister_auxiliary_method, @proxy_method_name
+        observable = AssociationObservers::orm_adapter.find(@observable_klass.constantize, @observable_id)
+        return if observable.nil?
+        notifier = Marshal.load(@notifier)
+        AssociationObservers::orm_adapter.find_all(@observer_klass.constantize, :id => @observer_ids).each(&notifier.method(:conditional_action).to_proc.curry[observable])
       end
 
 
