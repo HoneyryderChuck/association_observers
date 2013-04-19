@@ -53,11 +53,10 @@ module Notifier
     # Notifies all observers; filters the observers into two groups: one-to-many and one-to-one collections
     # @param [Object] observable the object which is notifying
     # @param [Array] observers the associated observers which will be notified
-    def notify(observable, observers, &block)
+    def notify(observable, observers)
       many, ones = observers.partition{|obs| obs.respond_to?(:size) }
-      action = block_given? ? block : method(:action)
-      notify_many(observable, many, &action)
-      notify_ones(observable, ones, &action)
+      notify_many(observable, many)
+      notify_ones(observable, ones)
     end
 
     # TODO: make this notify private as soon as possible again
@@ -70,7 +69,7 @@ module Notifier
     def notify_many(observable, many_observers)
       many_observers.each do |observers|
         AssociationObservers::queue.enqueue_notifications(@callback, observers) do |observer|
-          yield(observable, observer) if conditions(observable, observer)
+          action(observable, observer) if conditions(observable, observer)
         end if conditions_many(observable, observers)
       end
     end
@@ -82,8 +81,8 @@ module Notifier
     def notify_ones(observable, observers)
       observers.each do |uniq_observer|
         AssociationObservers::queue.enqueue_notifications(@callback, [uniq_observer], :batch_size => 1, :klass => uniq_observer.class) do |observer|
-          yield(observable, observer)
-        end if conditions(observable, uniq_observer)
+          action(observable, observer) if conditions(observable, uniq_observer)
+        end
       end
     end
   end
