@@ -1,5 +1,4 @@
 # -*- encoding : utf-8 -*-
-require 'drb/drb'
 require 'singleton'
 
 # the queue handles the notification distributions which the notifiers trigger. The Notifier usually knows what to notify
@@ -10,24 +9,6 @@ require 'singleton'
 module AssociationObservers
   class Queue
     include Singleton
-
-    # it checks whether there is a queue already registered in the DRb space. If so, use it. if not, create and register
-    def self.remote_queue
-      existing_queue = DRbObject.new_with_uri(AssociationObservers::options[:queue][:drb_location])
-      begin
-        existing_queue.is_alive?
-        existing_queue
-      rescue DRb::DRbConnError
-        queue = new
-        DRb.start_service(AssociationObservers::options[:queue][:drb_location], queue)
-        queue
-      end
-    end
-
-    # ghost method used in the registration/initialization process
-    def is_alive?
-      true
-    end
 
     # encapsulates enqueuing strategy. if the callback is to a destroy action, one cannot afford to enqueue, because the
     # observable will be deleted by then. So, perform destroy notifications synchronously right away. If not, the strategy
