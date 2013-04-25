@@ -1,5 +1,5 @@
 # -*- encoding : utf-8 -*-
-require "./spec/datamapper_helper"
+require "./spec/helpers/datamapper_helper"
 require "./spec/spec_helper"
 
 
@@ -109,6 +109,7 @@ describe AssociationObservers do
 
 
     has 1, :observer_observer_test
+    has n, :many_observer_observer_tests
 
     has n, :habtm_observable_tests, :through => Resource
 
@@ -129,6 +130,19 @@ describe AssociationObservers do
   end
 
   class ObserverObserverTest
+    include DataMapper::Resource
+
+    property :id, Serial
+    property :type, Discriminator
+    property :updated, Boolean
+    property :deleted, Boolean
+
+    belongs_to :observer_test, :required => false
+
+    observes :observer_test, :notifiers => :test_update, :on => :update
+  end
+
+  class ManyObserverObserverTest
     include DataMapper::Resource
 
     property :id, Serial
@@ -177,7 +191,6 @@ describe AssociationObservers do
       observer1.should_not be_deleted
     end
   end
-
   describe "when the belongs to observable is updated" do
     before(:each) do
       belongs_to_observable.update(:name => "doof")
@@ -318,6 +331,28 @@ describe AssociationObservers do
         observer_observer.observer_test.collection_observable_test.name.should == "doof"
         observer1.reload.should be_updated
         observer_observer.reload.should be_updated
+      end
+    end
+  end
+
+  describe "when the observer has an observer collection itself" do
+    before(:each) do
+      ManyObserverObserverTest.create(:observer_test => observer1)
+      observer1.reload
+    end
+    describe "and the batch size for the observer observers has changed" do
+      before do
+        @old_batch_size = ObserverTest.observable_options[:batch_size]
+        ManyObserverObserverTest.stub! :observable? => true
+        ManyObserverObserverTest.any_instance.stub :notify_observers => true
+        ObserverTest.batch_size = 101
+      end
+      after do
+        ObserverTest.batch_size = @old_batch_size
+      end
+      it "should update the observer observers collection with the right batch size" do
+        AssociationObservers.should_receive(:batched_each).with(anything, 101).any_number_of_times
+        belongs_to_observable.update(:name => "doof")
       end
     end
   end

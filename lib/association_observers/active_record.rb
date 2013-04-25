@@ -2,20 +2,12 @@
 if defined?(ActiveRecord)
 
   module AssociationObservers
-    def self.check_new_record_method
-      :new_record?
+    module Orm
+      autoload :ActiveRecord, "association_observers/orm/active_record"
     end
 
-    def self.fetch_model_from_collection
-      :klass
-    end
-
-    def self.batched_each(collection, batch, &block)
-      collection.find_each(:batch_size => batch, &block)
-    end
-
-    def self.validate_parameters(observer, observable_associations, notifier_names, callbacks)
-      raise "Invalid callback; possible options: :create, :update, :save, :destroy" unless callbacks.all?{|o|[:create,:update,:save,:destroy].include?(o.to_sym)}
+    def self.orm_adapter
+      @orm_adapter ||= Orm::ActiveRecord
     end
 
     # translation of AR callbacks to collection callbacks; we want to ignore the update on collections because neither
@@ -36,13 +28,20 @@ if defined?(ActiveRecord)
 
         private
 
-        def set_observers(notifiers, callbacks, observer_class, association_name)
+        # given the fetched information, it initializes the notifiers
+        # @param [Array] notifiers notifiers for the current class
+        # @param [Array] callbacks valid callbacks for the notifiers
+        # @param [Class] observer_class the class of the observer
+        # @param [Symbol] association_name the observer identifier on the observable
+        def set_observers(notifiers, callbacks, observer_class, association_name, observable_association_name)
           notifiers.each do |notifier|
             callbacks.each do |callback|
               options = {}
               observer_association = self.reflect_on_association(association_name.to_sym) ||
                                      self.reflect_on_association(association_name.pluralize.to_sym)
               options[:observer_class] = observer_class.base_class if observer_association.options[:polymorphic]
+
+              options[:observable_association_name] = observable_association_name
 
               self.add_observer notifier.new(callback, observer_association.name, options)
               include "#{notifier.name}::ObservableMethods".constantize if notifier.constants.map(&:to_sym).include?(:ObservableMethods)
@@ -74,7 +73,7 @@ if defined?(ActiveRecord)
         private
 
         def get_association_options_pairs(association_names)
-          reflect_on_all_associations.select{ |r| association_names.include?(r.name) }.map{|r| [r.klass, r.options] }
+          reflect_on_all_associations.select{ |r| association_names.include?(r.name) }.map{|r| [r.name, r.klass, r.options] }
         end
 
         def filter_collection_associations(associations)
@@ -113,8 +112,8 @@ if defined?(ActiveRecord)
 
             # bullshit ruby 1.8 can't stringify hashes, arrays, symbols nor strings correctly
             if RUBY_VERSION < "1.9"
-              assoc_options = AssociationObservers::extended_to_s(a.options)
-              callback_options = AssociationObservers::extended_to_s(callbacks)
+              assoc_options = AssociationObservers::Backports::extended_to_s(a.options)
+              callback_options = AssociationObservers::Backports::extended_to_s(callbacks)
             else
               assoc_options = a.options.to_s
               callback_options = callbacks

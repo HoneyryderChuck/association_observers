@@ -5,12 +5,12 @@
 class PropagationNotifier < Notifier::Base
 
   def conditions(observable, observer) ; observer.observable? ; end
-  def conditions_many(observable, observers) ; observers.send(AssociationObservers::fetch_model_from_collection).observable? ; end
+  def conditions_many(observable, observers) ; AssociationObservers::orm_adapter.collection_class(observers).observable? ; end
 
   # propagates the message to the observer's observer if the
   # observer is indeed observed by any entity
   def action(observable, observer, callback=@callback)
-    (observer.send(AssociationObservers::check_new_record_method) or not observer.respond_to?(:delay)) ? observer.send(:notify_observers, callback) : observer.delay.notify_observers(callback)
+    observer.send(:notify_observers, [callback, [@options[:observable_association_name] ] ])
   end
 
 end

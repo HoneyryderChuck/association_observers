@@ -7,6 +7,7 @@ require "association_observers/ruby18" if RUBY_VERSION < "1.9"
 require "active_support/core_ext/array/extract_options"
 require "active_support/core_ext/string/inflections"
 
+
 # Here it is defined the basic behaviour of how observer/observable model associations are set. There are here three
 # main roles defined: The observer associations, the observable associations, and the notifiers (the real observers).
 # Observer Associations: those are the associations of an observable which will be "listening/observing" to updates
@@ -24,34 +25,30 @@ require "active_support/core_ext/string/inflections"
 #
 # @author Tiago Cardoso
 module AssociationObservers
-
-  # @abstract
-  # @return [Symbol] ORM instance method name which checks whether the record is a new instance
-  def self.check_new_record_method
-    raise "should be defined in an adapter for the used ORM"
+  autoload :Queue, "association_observers/queue"
+  module Workers
+    autoload :ManyDelayedNotification, "association_observers/workers/many_delayed_notification"
   end
 
-  # @abstract
-  # @return [Symbol] ORM collection method name to get the model of its children
-  def self.fetch_model_from_collection
-    raise "should be defined in an adapter for the used ORM"
+  def self.orm_adapter
+    raise "no adapter for your ORM"
   end
 
-  # @abstract
-  # implementation of an ORM-specifc batched each enumerator on a collection
-  def self.batched_each(collection, batch, &block)
-    raise "should be defined in an adapter for the used ORM"
+  def self.queue
+    @queue ||= Queue.instance
   end
 
-  # @abstract
-  # checks the parameters received by the observer DSL call, handles unexpected input according by triggering exceptions,
-  # warnings, deprecation messages
-  # @param [Class] observer the observer class
-  # @param [Array] observable_associations collection of the names of associations on the observer which will be observed
-  # @param [Array] notifier_classes collection of the notifiers for the observation
-  # @param [Array] observer_callbacks collection of the callbacks/methods to be observed
-  def self.validate_parameters(observer, observable_associations, notifier_classes, observer_callbacks)
-    raise "should be defined in an adapter for the used ORM"
+  @default_options = {
+      :batch_size => 50,
+      :queue => {
+        :engine => nil,
+        :name => "observers",
+        :priority => nil
+      }
+  }
+
+  def self.options
+    @options ||= @default_options.dup
   end
 
 
@@ -62,10 +59,23 @@ module AssociationObservers
 
   # Methods to be added to observer associations
   module IsObserverMethods
-    def self.included(base) ; base.extend(ClassMethods) ; end
+    def self.included(base)
+      base.extend(ClassMethods)
+      AssociationObservers::orm_adapter.class_variable_set(base, :observable_options)
+      if RUBY_VERSION < "1.9"
+        base.observable_options = AssociationObservers::Backports.hash_select(AssociationObservers::options){|k, v| [:batch_size].include?(k) }
+      else
+        base.observable_options = AssociationObservers::options.select{|k, v| [:batch_size].include?(k) }
+      end
+    end
 
     module ClassMethods
       def observer? ; true ; end
+
+      def batch_size=(val)
+        raise "AssociationObservers: it must be an integer value" unless val.is_a?(Fixnum)
+        self.observable_options[:batch_size] = val
+      end
 
       private
 
@@ -139,7 +149,9 @@ module AssociationObservers
       end
     end
 
+    # blocks the observable behaviour
     def unobservable! ; @unobservable = true ; end
+    # unblocks the observable behaviour
     def observable! ; @unobservable = false ; end
 
     private
@@ -147,7 +159,7 @@ module AssociationObservers
     # informs the observers that something happened on this observable, passing all the observers to it
     # @param [Symbol] callback key of the callback being notified; only the observers for this callback will be run
     def notify! callback
-      notify_observers(callback) unless @unobservable
+      notify_observers([callback, []]) unless @unobservable
     end
   end
 
@@ -185,9 +197,7 @@ module AssociationObservers
       observer_callbacks = Array(opts[:on] || [:save, :destroy])
 
       # no observer, how are you supposed to observe?
-      AssociationObservers::validate_parameters(self, args, notifier_classes, observer_callbacks)
-
-
+      AssociationObservers::orm_adapter.validate_parameters(self, args, notifier_classes, observer_callbacks)
 
 
       notifier_classes.map!{|notifier_class|notifier_class.to_s.classify.constantize} << PropagationNotifier
@@ -198,7 +208,7 @@ module AssociationObservers
       end
 
       # 1: for each observed association, define behaviour
-      get_association_options_pairs(args).each do |klass, options|
+      get_association_options_pairs(args).each do |name, klass, options|
         klass.instance_eval do
 
           include IsObservableMethods
@@ -208,7 +218,7 @@ module AssociationObservers
           attr_reader :unobservable
 
           # load observers from this observable association
-          set_observers(notifier_classes, observer_callbacks, observer_class, (options[:as] || association_name).to_s)
+          set_observers(notifier_classes, observer_callbacks, observer_class, (options[:as] || association_name).to_s, name)
 
           # sets the callbacks to inform observers
           set_notification_on_callbacks(observer_callbacks)
@@ -229,6 +239,8 @@ end
 if defined?(Rails::Railtie) # RAILS
   require 'association_observers/railtie'
 else
-  require 'association_observers/activerecord' if defined?(ActiveRecord)
-  require 'association_observers/datamapper' if defined?(DataMapper)
+  # ORM Adapters
+  require 'association_observers/active_record' if defined?(ActiveRecord)
+  require 'association_observers/data_mapper' if defined?(DataMapper)
+
 end
