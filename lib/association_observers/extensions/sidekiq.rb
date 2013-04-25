@@ -23,6 +23,7 @@ module AssociationObservers
   class Queue
     private
 
+    # overwriting of the method. Sidekiq workers use a method called perform_async
     def enqueue(task, *args)
       task.perform_async(*args[0..-2] << Marshal.dump(args.last))
     end

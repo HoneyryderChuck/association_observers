@@ -47,6 +47,9 @@ module Notifier
 
     private
 
+    # helper method which checks whether the given callback is compatible with the notifier callback.
+    # Example: if the notifier is marked for :save, then :create is a valid callback.
+    #          if the notifier is marked for :update, then :create is not a valid callback.
     def accepted_callback?(callback)
       case @callback
         when :save then [:create, :update, :save].include?(callback)
@@ -88,6 +91,9 @@ module Notifier
       end
     end
 
+    # conditionally executes the notifier action. This is explicitly here so that its call can be queued and
+    # the background worker can call it. I don't like it, but it was decided this way because we can't marshal
+    # procs, therefore we can't pass procs to the workers. It is a necessary evil.
     def conditional_action(observable, observer)
       action(observable, observer) if conditions(observable, observer)
     end

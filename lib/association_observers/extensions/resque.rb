@@ -21,6 +21,7 @@ module AssociationObservers
   class Queue
     private
 
+    # overwriting of the enqueue method, using the Resque enqueue method already
     def enqueue(task, *args)
       Resque.enqueue(task, *args[0..-2] << Marshal.dump(args.last))
     end
