@@ -233,6 +233,17 @@ If you want to set a new default batch size, just:
 
 You can also set the queue name (default: "observers" and priority (if using delayed job) on the options, they are just another option under queue.
 
+### Ruby Support
+
+This gem is tested against the following rubies:
+
+* 1.8.7
+* 1.9.2
+* 1.9.3
+* 2.0.0
+* rubinius
+* jruby
+
 ### TODOs
 
 * Support for other ORM's (currently supporting ActiveRecord and DataMapper)
