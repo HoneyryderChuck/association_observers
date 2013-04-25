@@ -17,19 +17,12 @@ module AssociationObservers
     end
 
     module Proc
-      def self.curry(method, argc = nil)
-        min_argc = method.arity < 0 ? -method.arity - 1 : method.arity
-        argc ||= min_argc
-        block = proc do |*args|
-          if args.size >= argc
-            method.call(*args)
-          else
-            proc do |*more_args|
-              args += more_args
-              block.call(*args)
-            end
-          end
-        end
+      # it's called fake curry because it only works on one level, that is, you can only pass one level of sub-arguments
+      # sorry, ruby 1.8 sucks balls
+      def self.fake_curry(method, *args)
+        proc { |*proc_args|
+          method.call(*(args + proc_args))
+        }
       end
     end
 
