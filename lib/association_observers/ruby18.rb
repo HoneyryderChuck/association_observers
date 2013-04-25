@@ -15,5 +15,23 @@ module AssociationObservers
     def self.hash_select(hash, &proc)
       Hash[hash.select(&proc)]
     end
+
+    module Proc
+      def self.curry(method, argc = nil)
+        min_argc = method.arity < 0 ? -method.arity - 1 : method.arity
+        argc ||= min_argc
+        block = proc do |*args|
+          if args.size >= argc
+            method.call(*args)
+          else
+            proc do |*more_args|
+              args += more_args
+              block.call(*args)
+            end
+          end
+        end
+      end
+    end
+
   end
 end
