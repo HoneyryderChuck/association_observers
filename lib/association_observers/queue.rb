@@ -10,12 +10,13 @@ module AssociationObservers
   class Queue
     include Singleton
 
+
     # encapsulates enqueuing strategy. if the callback is to a destroy action, one cannot afford to enqueue, because the
     # observable will be deleted by then. So, perform destroy notifications synchronously right away. If not, the strategy
     # for now is get the object ids and enqueue them with the notifier.
     #
     # @param [ActiveRecord:Relation, DataMapper::Relationship] observers to be notified
-    # ªparam [Notifier::Base] notifier encapsulates the notification logic
+    # @param [Notifier::Base] notifier encapsulates the notification logic
     # @param [Hash] opts other possible options that can't be inferred from the given arguments
     def enqueue_notifications(observers, observable, notifier, opts={})
       klass       = opts[:klass]      || AssociationObservers::orm_adapter.collection_class(observers)
