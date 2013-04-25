@@ -38,18 +38,17 @@ module AssociationObservers
     @queue ||= Queue.instance
   end
 
-  @options = {
+  @default_options = {
       :batch_size => 50,
       :queue => {
         :engine => nil,
         :name => "observers",
-        :drb_location => "druby://localhost:8787",
         :priority => nil
       }
   }
 
   def self.options
-    @options
+    @options ||= @default_options.dup
   end
 
 
