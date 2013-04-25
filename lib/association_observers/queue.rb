@@ -23,7 +23,10 @@ module AssociationObservers
       batch_size  = opts[:batch_size] || klass.observable_options[:batch_size]
 
       if notifier.callback.eql?(:destroy)
-        AssociationObservers::orm_adapter.batched_each(observers, batch_size, &notifier.method(:conditional_action).to_proc.curry[observable])
+        method = RUBY_VERSION < "1.9" ?
+            AssociationObservers::Backports::Proc.curry(notifier.method(:conditional_action).to_proc)[observable] :
+            notifier.method(:conditional_action).to_proc.curry[observable]
+        AssociationObservers::orm_adapter.batched_each(observers, batch_size, &method)
       else
         # create workers
         i = 0
