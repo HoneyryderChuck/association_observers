@@ -18,5 +18,7 @@ tmp
 log/
 
 .rvmrc
+.ruby-version
+.ruby-gemset
 .idea
 vendor/bundler_gems
