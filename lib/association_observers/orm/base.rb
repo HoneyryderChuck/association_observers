@@ -8,7 +8,6 @@ module AssociationObservers
       end
 
       # finds record by primary key
-      # @abstract
       #
       # @param [Class] klass the class of the record to look for
       # @param [Object] primary_key primary key of the record to look for
@@ -18,7 +17,6 @@ module AssociationObservers
       end
 
       # finds all records which match the given attributes
-      # @abstract
       #
       # @param [Class] klass the class of the records to look for
       # @param [Hash] attributes list of key/value associations which have to be matched by the found records
