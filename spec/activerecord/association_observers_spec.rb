@@ -164,6 +164,10 @@ describe AssociationObservers do
   let(:belongs_to_observable) {BelongsToObservableTest.new(:observer_test => observer1)}
   let(:collection_observable) {CollectionObservableTest.create(:observer_tests => [observer1, observer2])}
   let(:polymorphic_observable) {PolymorphicHasManyObservableTest.create(:observer => observer2)}
+  before do
+    observer1.belongs_to_observable_test = belongs_to_observable
+    observer1.save
+  end
   describe "observer_methods" do
     let(:observer) {ObserverObserverTest.new}
     it "should be available" do
@@ -190,8 +194,7 @@ describe AssociationObservers do
       observer1.should_not be_deleted
     end
   end
-  # TODO: currently failing spec; after_destroy not being triggered in rspec: investigate further
-  pending "when the belongs to observable is deleted" do
+  describe "when the belongs to observable is deleted" do
     before(:each) do
       observer1.belongs_to_observable_test.destroy
     end
