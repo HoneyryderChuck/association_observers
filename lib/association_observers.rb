@@ -7,6 +7,8 @@ require "association_observers/ruby18" if RUBY_VERSION < "1.9"
 require "active_support/core_ext/array/extract_options"
 require "active_support/core_ext/string/inflections"
 
+require 'orm_adapter'
+
 
 # Here it is defined the basic behaviour of how observer/observable model associations are set. There are here three
 # main roles defined: The observer associations, the observable associations, and the notifiers (the real observers).

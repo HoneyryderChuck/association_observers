@@ -14,7 +14,7 @@ module AssociationObservers
       # @param [Object] primary_key primary key of the record to look for
       # @return [Symbol] ORM class method that fetches records from the DB
       def self.find(klass, primary_key)
-        raise "should be defined in an adapter for the used ORM"
+        klass.to_adapter.get(primary_key)
       end
 
       # finds all records which match the given attributes
@@ -24,7 +24,7 @@ module AssociationObservers
       # @param [Hash] attributes list of key/value associations which have to be matched by the found records
       # @return [Symbol] ORM class method that fetches records from the DB
       def self.find_all(klass, attributes)
-        raise "should be defined in an adapter for the used ORM"
+        klass.to_adapter.find_all(attributes)
       end
 
       # @param [Array] collection records to iterate through
