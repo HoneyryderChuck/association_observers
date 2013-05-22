@@ -11,6 +11,8 @@ module AssociationObservers
       # @see AssociationObservers::Orm::Base.find_all
       def self.find_all(klass, attributes)
         klass.send("find_all_by_#{attributes.keys.join('_and_')}", *attributes.values)
+      def self.key(klass)
+        klass.primary_key
       end
 
       # @see AssociationObservers::Orm::Base.get_field

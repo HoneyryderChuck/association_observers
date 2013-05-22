@@ -2,6 +2,11 @@
 module AssociationObservers
   module Orm
     class Base
+
+      def self.key(klass)
+        raise "should be defined in an adapter for the used ORM"
+      end
+
       # finds record by primary key
       # @abstract
       #

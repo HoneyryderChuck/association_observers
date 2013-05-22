@@ -31,7 +31,7 @@ module AssociationObservers
         # create workers
         i = 0
         loop do
-          ids = AssociationObservers::orm_adapter.get_field(observers, :fields => [:id], :limit => batch_size, :offset => i*batch_size).compact
+          ids = AssociationObservers::orm_adapter.get_field(observers, :fields => [AssociationObservers::orm_adapter.key(klass)], :limit => batch_size, :offset => i*batch_size).compact
           break if ids.empty?
           enqueue(Workers::ManyDelayedNotification, ids, klass.name, observable.id, observable.class.name, notifier)
           i += 1

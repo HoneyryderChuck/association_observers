@@ -11,6 +11,8 @@ module AssociationObservers
       # @see AssociationObservers::Orm::Base.find_all
       def self.find_all(klass, attributes)
         klass.all(attributes)
+      def self.key(klass)
+        klass.key.first.name
       end
 
       # @see AssociationObservers::Orm::Base.get_field
