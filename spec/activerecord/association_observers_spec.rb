@@ -1,6 +1,7 @@
 # -*- encoding : utf-8 -*-
-require "./spec/helpers/active_record_helper"
-require "./spec/spec_helper"
+require "helpers/active_record_helper"
+require "spec_helper"
+require "observer_example_spec"
 
 
 describe AssociationObservers do

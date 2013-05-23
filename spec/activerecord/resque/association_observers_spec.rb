@@ -1,7 +1,7 @@
 # -*- encoding : utf-8 -*-
-require "./spec/helpers/active_record_helper"
-require "./spec/helpers/resque_helper"
-require "./spec/spec_helper"
+require "helpers/active_record_helper"
+require "helpers/resque_helper"
+require "spec_helper"
 
 AssociationObservers::queue.engine = :resque
 

@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
-require "./spec/helpers/datamapper_helper"
-require "./spec/spec_helper"
+require "helpers/datamapper_helper"
+require "spec_helper"
 
 
 describe AssociationObservers do
