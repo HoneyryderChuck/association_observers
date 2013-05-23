@@ -38,19 +38,11 @@ shared_examples_for "example using observers" do
       observer1.should_not be_deleted
     end
   end
-  describe "when the belongs to observable is deleted" do
-    before(:each) do
-      observer1.belongs_to_observable_test.destroy
-    end
-    it "should destroy its observer" do
-      observer1.reload.should be_deleted
-    end
-  end
   describe "when the observable hides itself" do
     before(:each) do
-      observer1.update_column(:updated, nil)
+      update_model!(observer1, :updated => nil)
       belongs_to_observable.unobservable!
-      belongs_to_observable.update_attributes(:name => "doof")
+      update_model(belongs_to_observable, :name => "doof")
     end
     it "should not update its observer" do
       observer1.belongs_to_observable_test.name.should == "doof"
@@ -59,7 +51,7 @@ shared_examples_for "example using observers" do
   end
   describe "when the has one observable is updated" do
     before(:each) do
-      observer1.has_one_observable_test.update_attributes(:name => "doof")
+      update_model(observer1.has_one_observable_test, :name => "doof")
     end
     it "should update its observer" do
       observer1.has_one_observable_test.name.should == "doof"
@@ -69,7 +61,7 @@ shared_examples_for "example using observers" do
   end
   describe "when one of the has many observables is updated" do
     before(:each) do
-      observer1.has_many_observable_tests.first.update_attributes(:name => "doof")
+      update_model(observer1.has_many_observable_tests.first, :name => "doof")
     end
     it "should update its observer" do
       observer1.has_many_observable_tests.first.name.should == "doof"
@@ -78,7 +70,7 @@ shared_examples_for "example using observers" do
     end
     describe "and afterwards deleted" do
       before(:each) do
-        observer1.update_column(:deleted, false)
+        update_model!(observer1, :deleted => false)
         observer1.has_many_observable_tests.first.destroy
       end
       it "should update its observer" do
@@ -86,117 +78,51 @@ shared_examples_for "example using observers" do
       end
     end
   end
-  describe "when one of the polymorphic has many is updated" do
-    before(:each) do
-      observer1.polymorphic_has_many_observable_tests = [PolymorphicHasManyObservableTest.new,
-                                                         PolymorphicHasManyObservableTest.new,
-                                                         PolymorphicHasManyObservableTest.new]
-      observer1.update_column(:updated, false)
-      observer1.reload
-    end
-    it "should update its observer" do
-      observer1.polymorphic_has_many_observable_tests.first.update_attributes(:name => "doof")
-      observer1.polymorphic_has_many_observable_tests.first.name.should == "doof"
-      observer1.reload.should be_updated
-      observer1.should_not be_deleted
-    end
-    describe "having another polymorphic observable of same type somewhere else" do
+  if defined?(PolymorphicHasManyObservableTest)
+    describe "when one of the polymorphic has many is updated" do
       before(:each) do
-        observer2.update_column(:updated, false)
+        observer1.polymorphic_has_many_observable_tests = [PolymorphicHasManyObservableTest.new,
+                                                           PolymorphicHasManyObservableTest.new,
+                                                           PolymorphicHasManyObservableTest.new]
+        update_model!(observer1, :updated => false)
+        observer1.reload
       end
-      it "should not update its observer" do
-        observer1.polymorphic_has_many_observable_tests.first.update_attributes(:name => "doof")
+      it "should update its observer" do
+        update_model(observer1.polymorphic_has_many_observable_tests.first, :name => "doof")
         observer1.polymorphic_has_many_observable_tests.first.name.should == "doof"
         observer1.reload.should be_updated
         observer1.should_not be_deleted
-        observer2.reload.should_not be_updated
-        observer2.should_not be_deleted
+      end
+      describe "having another polymorphic observable of same type somewhere else" do
+        before(:each) do
+          update_model!(observer2, :updated => false)
+        end
+        it "should not update its observer" do
+          update_model(observer1.polymorphic_has_many_observable_tests.first, :name => "doof")
+          observer1.polymorphic_has_many_observable_tests.first.name.should == "doof"
+          observer1.reload.should be_updated
+          observer1.should_not be_deleted
+          observer2.reload.should_not be_updated
+          observer2.should_not be_deleted
+        end
       end
     end
   end
   describe "when the has many through has been updated" do
     before(:each) do
       observer1.has_many_observable_tests.first.has_many_through_observable_tests.create
-      observer1.update_column(:updated, false)
+      update_model!(observer1, :updated => false)
     end
     it "should update its observer" do
-      observer1.has_many_observable_tests.first.has_many_through_observable_tests.first.update_attributes(:name => "doof")
+      update_model(observer1.has_many_observable_tests.first.has_many_through_observable_tests.first, :name => "doof")
       observer1.has_many_observable_tests.first.has_many_through_observable_tests.first.name.should == "doof"
       observer1.reload.should be_updated
       observer1.should_not be_deleted
     end
   end
-  describe "when an has and belongs to many association" do
-    describe "has been created" do
-      before(:each) do
-        observer1.update_column(:updated, false)
-        observer1.habtm_observable_tests.create(:name => "doof")
-      end
-      it "should update its observer" do
-        observer1.habtm_observable_tests.first.name.should == "doof"
-        observer1.reload.should be_updated
-        observer1.should_not be_deleted
-      end
-      describe "and then updated" do
-        before(:each) do
-          observer1.update_column(:updated, false)
-          observer1.habtm_observable_tests.first.update_attributes(:name => "superdoof")
-        end
-        it "should update its observer" do
-          observer1.habtm_observable_tests.first.name.should == "superdoof"
-          observer1.reload.should be_updated
-          observer1.should_not be_deleted
-        end
-      end
-      describe "and afterwards deleted" do
-        before(:each) do
-          observer1.update_column(:deleted, false)
-          observer1.habtm_observable_tests.delete(observer1.habtm_observable_tests.first)
-        end
-        it "should update its observer" do
-          observer1.reload.should be_deleted
-        end
-      end
-      describe "and completely replaced" do
-        before(:each) do
-          observer1.update_column(:updated, false)
-          observer1.update_column(:deleted, false)
-          observer1.habtm_observable_tests = [HabtmObservableTest.new]
-        end
-        it "should update and delete the observer" do
-          observer1.reload.should be_updated
-          observer1.reload.should be_deleted
-        end
-      end
-
-    end
-    describe "has been linked from an existing assoc" do
-      before(:each) do
-        t = HabtmObservableTest.create(:name => "doof")
-        observer1.habtm_observable_tests << t
-        observer1.update_column(:updated, false)
-        observer1.habtm_observable_tests.first.update_attributes(:name => "superdoof")
-      end
-      it "should update its observer" do
-        observer1.habtm_observable_tests.first.name.should == "superdoof"
-        observer1.reload.should be_updated
-        observer1.should_not be_deleted
-      end
-      describe "and afterwards deleted" do
-        before(:each) do
-          observer1.update_column(:deleted, false)
-          observer1.habtm_observable_tests.delete(observer1.habtm_observable_tests.first)
-        end
-        it "should update its observer" do
-          observer1.reload.should be_deleted
-        end
-      end
-
-    end
-  end
   describe "when the collection observable is updated" do
     before(:each) do
-      collection_observable.update_attributes(:name => "doof")
+      update_model(collection_observable, :name => "doof")
     end
     it "should update its observers" do
       collection_observable.name.should == "doof"
@@ -210,11 +136,11 @@ shared_examples_for "example using observers" do
   describe "when the observer has an observer itself" do
     let(:observer_observer) { ObserverObserverTest.create }
     before(:each) do
-      observer1.update_attribute(:observer_observer_test, observer_observer)
+      update_model(observer1, :observer_observer_test => observer_observer)
     end
     describe "when the belongs to observable is updated" do
       before(:each) do
-        belongs_to_observable.update_attributes(:name => "doof")
+        update_model(belongs_to_observable, :name => "doof")
       end
       it "should update its observer and its observer's observer" do
         belongs_to_observable.name.should == "doof"
@@ -224,7 +150,7 @@ shared_examples_for "example using observers" do
     end
     describe "when the has one observable is updated" do
       before(:each) do
-        observer_observer.observer_test.has_one_observable_test.update_attributes(:name => "doof")
+        update_model(observer_observer.observer_test.has_one_observable_test, :name => "doof")
       end
       it "should update its observer and its observer's observer" do
         observer_observer.observer_test.has_one_observable_test.name.should == "doof"
@@ -234,7 +160,7 @@ shared_examples_for "example using observers" do
     end
     describe "when one of the has many observables is updated" do
       before(:each) do
-        observer_observer.observer_test.has_many_observable_tests.first.update_attributes(:name => "doof")
+        update_model(observer_observer.observer_test.has_many_observable_tests.first, :name => "doof")
       end
       it "should update its observer and its observer's observer" do
         observer_observer.observer_test.has_many_observable_tests.first.name.should == "doof"
@@ -242,29 +168,31 @@ shared_examples_for "example using observers" do
         observer_observer.reload.should be_updated
       end
     end
-    describe "when one of the polymorphic has many is updated" do
-      before(:each) do
-        observer1.polymorphic_has_many_observable_tests = [PolymorphicHasManyObservableTest.new,
-                                                           PolymorphicHasManyObservableTest.new,
-                                                           PolymorphicHasManyObservableTest.new]
-        observer1.update_column(:updated, false)
-        observer_observer.update_column(:updated, false)
-      end
-      it "should update its observer" do
-        observer_observer.observer_test.polymorphic_has_many_observable_tests.first.update_attributes(:name => "doof")
-        observer_observer.observer_test.polymorphic_has_many_observable_tests.first.name.should == "doof"
-        observer1.reload.should be_updated
-        observer_observer.reload.should be_updated
+    if defined?(PolymorphicHasManyObservableTest)
+      describe "when one of the polymorphic has many is updated" do
+        before(:each) do
+          observer1.polymorphic_has_many_observable_tests = [PolymorphicHasManyObservableTest.new,
+                                                             PolymorphicHasManyObservableTest.new,
+                                                             PolymorphicHasManyObservableTest.new]
+          update_model!(observer1, :updated => false)
+          update_model!(observer_observer, :updated => false)
+        end
+        it "should update its observer" do
+          update_model(observer_observer.observer_test.polymorphic_has_many_observable_tests.first, :name => "doof")
+          observer_observer.observer_test.polymorphic_has_many_observable_tests.first.name.should == "doof"
+          observer1.reload.should be_updated
+          observer_observer.reload.should be_updated
+        end
       end
     end
     describe "when the has many through has been updated" do
       before(:each) do
         observer1.has_many_observable_tests.first.has_many_through_observable_tests.create
-        observer1.update_column(:updated, false)
-        observer_observer.update_column(:updated, false)
+        update_model!(observer1, :updated => false)
+        update_model!(observer_observer, :updated => false)
       end
       it "should update its observer" do
-        observer1.has_many_observable_tests.first.has_many_through_observable_tests.first.update_attributes(:name => "doof")
+        update_model(observer1.has_many_observable_tests.first.has_many_through_observable_tests.first, :name => "doof")
         observer1.has_many_observable_tests.first.has_many_through_observable_tests.first.name.should == "doof"
         observer1.reload.should be_updated
         observer_observer.reload.should be_updated
@@ -273,7 +201,7 @@ shared_examples_for "example using observers" do
     describe "when the collection observable is updated" do
       before(:each) do
         collection_observable
-        observer_observer.observer_test.reload.collection_observable_test.update_attributes(:name => "doof")
+        update_model(observer_observer.observer_test.reload.collection_observable_test, :name => "doof")
       end
       it "should update its observers and its observer's observer" do
         observer_observer.observer_test.collection_observable_test.name.should == "doof"
@@ -285,9 +213,7 @@ shared_examples_for "example using observers" do
 
   describe "when the observer has an observer collection itself" do
     before(:each) do
-      update_model(observer1, :many_observer_observer_tests => [ManyObserverObserverTest.new,
-                                                                ManyObserverObserverTest.new,
-                                                                ManyObserverObserverTest.new])
+      create_model(ManyObserverObserverTest, :observer_test => observer1)
       observer1.reload
     end
     describe "and the batch size for the observer observers has changed" do
@@ -301,36 +227,38 @@ shared_examples_for "example using observers" do
       end
       it "should update the observer observers collection with the right batch size" do
         AssociationObservers.should_receive(:batched_each).with(anything, 101).any_number_of_times
-        belongs_to_observable.update_attributes(:name => "doof")
+        update_model(belongs_to_observable, :name => "doof")
       end
     end
   end
 
-  describe "when the association is polymorphic" do
-    let(:polymorphic_observable) { create_model(HasOnePolymorphicObservableTest, :observer => ObserverTest.new) }
-    let(:observer) {polymorphic_observable.observer}
-    before(:each) do
-      observer.update_column(:updated, nil)
-    end
-    describe "when the has one association is updated" do
+  if defined?(HasOnePolymorphicObservableTest)
+    describe "when the association is polymorphic" do
+      let(:polymorphic_observable) { create_model(HasOnePolymorphicObservableTest, :observer => ObserverTest.new) }
+      let(:observer) {polymorphic_observable.observer}
       before(:each) do
-        polymorphic_observable.update_attributes(:name => "doof")
+        update_model!(observer, :updated => nil)
       end
-      it "should update its observer" do
-        polymorphic_observable.name.should == "doof"
-        observer.reload.should be_updated
-      end
-    end
-    describe "when the observable is not observed" do
-      let(:other_polymorphic_observable) { create_model(HasOnePolymorphicObservableTest, :observer => OtherPossibleObserverTest.new) }
-      let(:non_observer){ other_polymorphic_observable.observer }
-      describe " and the observable is updated" do
+      describe "when the has one association is updated" do
         before(:each) do
-          other_polymorphic_observable.update_attributes(:name => "doof")
+          update_model(polymorphic_observable, :name => "doof")
         end
-        it "should not update its (non) observer" do
-          other_polymorphic_observable.name.should == "doof"
-          non_observer.reload.should_not be_updated
+        it "should update its observer" do
+          polymorphic_observable.name.should == "doof"
+          observer.reload.should be_updated
+        end
+      end
+      describe "when the observable is not observed" do
+        let(:other_polymorphic_observable) { create_model(HasOnePolymorphicObservableTest, :observer => OtherPossibleObserverTest.new) }
+        let(:non_observer){ other_polymorphic_observable.observer }
+        describe " and the observable is updated" do
+          before(:each) do
+            update_model(other_polymorphic_observable, :name => "doof")
+          end
+          it "should not update its (non) observer" do
+            other_polymorphic_observable.name.should == "doof"
+            non_observer.reload.should_not be_updated
+          end
         end
       end
     end
@@ -341,9 +269,8 @@ shared_examples_for "example using observers" do
     let(:observer) {through_observable.has_one_observable_test.observer_test}
     describe "when the has one association is updated" do
       before(:each) do
-        observer.update_attributes(:updated => nil)
-        through_observable.reload
-        through_observable.update_attributes(:name => "doof")
+        update_model(observer, :updated => nil)
+        update_model(through_observable, :name => "doof")
       end
       it "should update its observer" do
         through_observable.name.should == "doof"
@@ -364,7 +291,7 @@ shared_examples_for "example using observers" do
     end
     describe "when something changes on the observable" do
       before(:each) do
-        observer1.has_one_observable_test.update_attributes(:name => "doof")
+        update_model(observer1.has_one_observable_test, :name => "doof")
       end
       it "should update only the observer (and therefore avoid infinite cycle)" do
         observer1.has_one_observable_test.name.should == "doof"
