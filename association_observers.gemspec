@@ -27,7 +27,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency("rake",["~> 0.9.2.2"])
   gem.add_development_dependency("rack-test",["~> 0.6.2"])
   gem.add_development_dependency("rspec",["~> 2.11.0"])
-  gem.add_development_dependency("database_cleaner",["~> 0.8.0"])
   gem.add_development_dependency("colorize",["~> 0.5.8"])
   gem.add_development_dependency("pry")
   gem.add_development_dependency("pry-doc")
