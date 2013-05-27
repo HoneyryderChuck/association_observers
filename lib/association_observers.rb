@@ -33,7 +33,11 @@ module AssociationObservers
   end
 
   def self.orm_adapter
-    raise "no adapter for your ORM"
+    @orm_adapter || raise("no adapter for your ORM")
+  end
+
+  def self.orm_adapter=(adapter)
+    @orm_adapter = adapter
   end
 
   def self.queue
@@ -57,12 +61,31 @@ module AssociationObservers
   def self.included(model)
     model.extend ClassMethods
     model.send :include, InstanceMethods
+    adapter = case
+      when (defined?(::ActiveRecord) and model.eql?(::ActiveRecord::Base))
+        require "association_observers/orm/active_record"
+        self.orm_adapter = AssociationObservers::Orm::ActiveRecord
+        AssociationObservers::ActiveRecord
+      when (defined?(::DataMapper) and model.ancestors.include?((::DataMapper::Resource)))
+        require "association_observers/orm/data_mapper"
+        self.orm_adapter = AssociationObservers::Orm::DataMapper
+        AssociationObservers::DataMapper
+    end
+    unless adapter.nil?
+      model.send :include, adapter
+    end
   end
 
   # Methods to be added to observer associations
   module IsObserverMethods
     def self.included(base)
       base.extend(ClassMethods)
+      case
+        when (defined?(::ActiveRecord) and base < ::ActiveRecord::Base)
+          base.extend AssociationObservers::ActiveRecord::IsObserverMethods
+        when (defined?(::DataMapper) and base.ancestors.include?(::DataMapper::Resource))
+          base.extend AssociationObservers::DataMapper::IsObserverMethods
+      end
       AssociationObservers::orm_adapter.class_variable_set(base, :observable_options)
       if RUBY_VERSION < "1.9"
         base.observable_options = AssociationObservers::Backports.hash_select(AssociationObservers::options){|k, v| [:batch_size].include?(k) }
@@ -79,7 +102,7 @@ module AssociationObservers
         self.observable_options[:batch_size] = val
       end
 
-      private
+      protected
 
       # @abstract
       # includes modules in the observer model
@@ -122,12 +145,18 @@ module AssociationObservers
   module IsObservableMethods
     def self.included(base)
       base.extend(ClassMethods)
+      case
+        when (defined?(::ActiveRecord) and base < ::ActiveRecord::Base)
+          base.extend AssociationObservers::ActiveRecord::IsObservableMethods
+        when (defined?(::DataMapper) and base.ancestors.include?(::DataMapper::Resource))
+          base.extend AssociationObservers::DataMapper::IsObservableMethods
+      end
     end
 
     module ClassMethods
       def observable? ; true ; end
 
-      private
+      protected
 
       # @abstract
       # includes modules in the observable model
@@ -156,7 +185,7 @@ module AssociationObservers
     # unblocks the observable behaviour
     def observable! ; @unobservable = false ; end
 
-    private
+    protected
 
     # informs the observers that something happened on this observable, passing all the observers to it
     # @param [Symbol] callback key of the callback being notified; only the observers for this callback will be run
@@ -171,6 +200,7 @@ module AssociationObservers
   end
 
   module ClassMethods
+
     def observer? ; false ; end
     def observable? ; false ; end
 
@@ -241,8 +271,13 @@ end
 if defined?(Rails::Railtie) # RAILS
   require 'association_observers/railtie'
 else
-  # ORM Adapters
-  require 'association_observers/active_record' if defined?(ActiveRecord)
-  require 'association_observers/data_mapper' if defined?(DataMapper)
+  if defined?(ActiveRecord)
+    require 'association_observers/active_record'
+    ActiveRecord::Base.send :include, AssociationObservers
+  end
+  if defined?(DataMapper)
+    require 'association_observers/data_mapper'
+    DataMapper::Model.append_inclusions AssociationObservers
+  end
 
 end

@@ -41,7 +41,7 @@ describe AssociationObservers do
   
 
   class BelongsToObservableTest 
-    include DataMapper::Resource
+    include ::DataMapper::Resource
     property :id, Serial
     property :name, String
 
@@ -53,14 +53,14 @@ describe AssociationObservers do
 
   end
   class CollectionObservableTest 
-    include DataMapper::Resource
+    include ::DataMapper::Resource
     property :id, Serial
     property :name, String
 
     has n, :observer_tests
   end
   class HasOneObservableTest 
-    include DataMapper::Resource
+    include ::DataMapper::Resource
     property :id, Serial
     property :name, String
 
@@ -68,7 +68,7 @@ describe AssociationObservers do
     has 1, :has_one_through_observable_test
   end
   class HasManyObservableTest 
-    include DataMapper::Resource
+    include ::DataMapper::Resource
     property :id, Serial
     property :name, String
 
@@ -76,7 +76,7 @@ describe AssociationObservers do
     has n, :has_many_through_observable_tests
   end
   class HasManyThroughObservableTest 
-    include DataMapper::Resource
+    include ::DataMapper::Resource
     property :id, Serial
     property :name, String
 
@@ -85,14 +85,14 @@ describe AssociationObservers do
   end
 
   class HabtmObservableTest
-    include DataMapper::Resource
+    include ::DataMapper::Resource
     property :id, Serial
     property :name, String
 
     has n, :observer_tests, :through => Resource
   end
   class HasOneThroughObservableTest
-    include DataMapper::Resource
+    include ::DataMapper::Resource
     property :id, Serial
     property :name, String
 
@@ -103,7 +103,7 @@ describe AssociationObservers do
 
 
   class ObserverTest
-    include DataMapper::Resource
+    include ::DataMapper::Resource
 
     property :id, Serial
     property :type, Discriminator
@@ -144,7 +144,7 @@ describe AssociationObservers do
   end
 
   class ObserverObserverTest
-    include DataMapper::Resource
+    include ::DataMapper::Resource
 
     property :id, Serial
     property :type, Discriminator
@@ -157,7 +157,7 @@ describe AssociationObservers do
   end
 
   class ManyObserverObserverTest
-    include DataMapper::Resource
+    include ::DataMapper::Resource
 
     property :id, Serial
     property :type, Discriminator
@@ -206,6 +206,7 @@ describe AssociationObservers do
   it_should_behave_like "example using observers" do
     describe "when the belongs to association gets banged" do
       before(:each) do
+        debugger
         belongs_to_observable.bang
       end
       it "should update its observer" do

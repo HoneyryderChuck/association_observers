@@ -1,31 +1,34 @@
 # -*- encoding : utf-8 -*-
-if defined?(DataMapper)
-  module AssociationObservers
-    module Orm
-      autoload :DataMapper, "association_observers/orm/data_mapper"
-    end
-
-    def self.orm_adapter
-      @orm_adapter ||= Orm::DataMapper
-    end
+module AssociationObservers
+  module DataMapper
+    #module Orm
+    #  autoload :DataMapper, "association_observers/orm/data_mapper"
+    #end
+    #
+    #def self.orm_adapter
+    #  @orm_adapter ||= Orm::DataMapper
+    #end
 
     module IsObservableMethods
-      def self.included(model)
+      def self.extended(model)
         model.extend(ClassMethods)
         model.send :include, InstanceMethods
+      end
+      def self.included(model)
+        model.extend(self)
       end
 
       module ClassMethods
         def notifiers
           @notifiers ||= []
         end
-        private
+        protected
 
         def set_observers(ntfs, callbacks, observer_class, association_name, observable_association_name)
           ntfs.each do |notifier|
             callbacks.each do |callback|
               options = {} # todo: use this for polymorphics
-              observer_association = self.relationships[association_name]||
+              observer_association = self.relationships[association_name] ||
                                      self.relationships[association_name.pluralize]
 
               options[:observable_association_name] = observable_association_name
@@ -49,7 +52,7 @@ if defined?(DataMapper)
       module InstanceMethods
 
 
-        private
+        protected
 
 
         def notify_observers(args)
@@ -59,10 +62,16 @@ if defined?(DataMapper)
     end
 
     module IsObserverMethods
+      def self.extended(model)
+        model.extend ClassMethods
+      end
+      def self.included(model)
+        model.extend(self)
+      end
 
       module ClassMethods
 
-        private
+        protected
 
         def observer_extensions
           #include DataMapper::Observer
@@ -70,7 +79,7 @@ if defined?(DataMapper)
 
         def get_association_options_pairs(association_names)
           # TODO: find better way to figure out the class of the relationship entity
-          relationships.select{|r|association_names.include?(r.name)}.map{|r| [r.name, (r.is_a?(DataMapper::Associations::ManyToOne::Relationship) ? r.parent_model : r.child_model), r.options] }
+          relationships.select{|r|association_names.include?(r.name)}.map{|r| [r.name, (r.is_a?(::DataMapper::Associations::ManyToOne::Relationship) ? r.parent_model : r.child_model), r.options] }
         end
 
         def filter_collection_associations(associations)
@@ -83,9 +92,9 @@ if defined?(DataMapper)
 
         def redefine_collection_associations_with_collection_callbacks(associations, callbacks)
           associations.each do |assoc|
+            relationship = relationships[assoc]
             callbacks.each do |callback|
-              relationship = relationships[assoc]
-              model_method = relationship.is_a?(DataMapper::Associations::ManyToOne::Relationship ) ?
+              model_method = relationship.is_a?(::DataMapper::Associations::ManyToOne::Relationship ) ?
                              :parent_model :
                              :child_model
               relationship.send(model_method).after callback do
@@ -98,7 +107,4 @@ if defined?(DataMapper)
       end
     end
   end
-
-
-  DataMapper::Model.append_inclusions AssociationObservers
 end

@@ -1,14 +1,13 @@
 # -*- encoding : utf-8 -*-
-if defined?(ActiveRecord)
-
-  module AssociationObservers
-    module Orm
-      autoload :ActiveRecord, "association_observers/orm/active_record"
-    end
-
-    def self.orm_adapter
-      @orm_adapter ||= Orm::ActiveRecord
-    end
+module AssociationObservers
+  module ActiveRecord
+    #module Orm
+    #  autoload :ActiveRecord, "association_observers/orm/active_record"
+    #end
+    #
+    #def self.orm_adapter
+    #  @orm_adapter ||= Orm::ActiveRecord
+    #end
 
     # translation of AR callbacks to collection callbacks; we want to ignore the update on collections because neither
     # add nor remove shall be considered an update event in the observables
@@ -24,9 +23,15 @@ if defined?(ActiveRecord)
     COLLECTION_CALLBACKS_MAPPER = {:create => :add, :save => :add, :destroy => :remove}
 
     module IsObservableMethods
+      def self.extended(model)
+        model.extend ClassMethods
+      end
+      def self.included(model)
+        model.extend(self)
+      end
       module ClassMethods
 
-        private
+        protected
 
         # given the fetched information, it initializes the notifiers
         # @param [Array] notifiers notifiers for the current class
@@ -67,10 +72,15 @@ if defined?(ActiveRecord)
     end
 
     module IsObserverMethods
-
+      def self.extended(model)
+        model.extend ClassMethods
+      end
+      def self.included(model)
+        model.extend(self)
+      end
       module ClassMethods
 
-        private
+        protected
 
         def get_association_options_pairs(association_names)
           reflect_on_all_associations.select{ |r| association_names.include?(r.name) }.map{|r| [r.name, r.klass, r.options] }
@@ -126,9 +136,6 @@ if defined?(ActiveRecord)
         end
       end
     end
+
   end
-
-
-
-  ActiveRecord::Base.send(:include, AssociationObservers)
 end
