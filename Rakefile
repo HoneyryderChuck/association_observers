@@ -30,11 +30,12 @@ RSpec::Core::RakeTask.new(:data_mapper_spec) do |t|
   t.pattern   = "spec/datamapper/*_spec.rb"
 end
 
-task :spec do |t|
-  Rake::Task["active_record_spec"].invoke rescue (failed = true)
-  Rake::Task["active_record_delayed_job_spec"].invoke rescue (failed = true)
-  Rake::Task["active_record_resque_spec"].invoke rescue (failed = true)
-  Rake::Task["active_record_sidekiq_spec"].invoke rescue (failed = true) unless RUBY_VERSION == "1.8.7"
-  Rake::Task["data_mapper_spec"].invoke rescue (failed = true)
-  raise "failed" if failed
-end
+RSpec::Core::RakeTask.new(:spec)
+#task :spec do |t|
+#  Rake::Task["active_record_spec"].invoke rescue (failed = true)
+#  Rake::Task["active_record_delayed_job_spec"].invoke rescue (failed = true)
+#  Rake::Task["active_record_resque_spec"].invoke rescue (failed = true)
+#  Rake::Task["active_record_sidekiq_spec"].invoke rescue (failed = true) unless RUBY_VERSION == "1.8.7"
+#  Rake::Task["data_mapper_spec"].invoke rescue (failed = true)
+#  raise "failed" if failed
+#end

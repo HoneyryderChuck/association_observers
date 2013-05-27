@@ -1,7 +1,7 @@
 # -*- encoding : utf-8 -*-
-require "helpers/datamapper_helper"
 require "spec_helper"
 require "observer_example_spec"
+require "helpers/datamapper_helper"
 
 
 describe AssociationObservers do

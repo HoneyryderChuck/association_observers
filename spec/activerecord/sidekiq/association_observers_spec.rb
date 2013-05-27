@@ -1,7 +1,7 @@
 # -*- encoding : utf-8 -*-
-require "helpers/active_record_helper"
 require "helpers/sidekiq_helper"
 require "spec_helper"
+require "helpers/active_record_helper"
 
 AssociationObservers::queue.engine = :sidekiq
 
