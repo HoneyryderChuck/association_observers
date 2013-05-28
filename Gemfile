@@ -11,12 +11,12 @@ group :test do
   gem "sidekiq",                   :require => false unless RUBY_VERSION == "1.8.7"
 end
 
-gem 'activerecord'
-gem 'datamapper'
-gem 'dm-mysql-adapter'
+#gem 'activerecord'
+#gem 'datamapper'
+#gem 'dm-mysql-adapter'
 
 platforms :ruby do
-  gem 'mysql2'
+  #gem 'activerecord_sqlite3_adapter'
 
 end
 
