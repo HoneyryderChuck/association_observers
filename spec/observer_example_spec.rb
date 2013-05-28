@@ -8,6 +8,17 @@ shared_examples_for "example using observers" do
   let(:belongs_to_observable) {build_model(BelongsToObservableTest, :observer_test => observer1)}
   let(:collection_observable) {create_model(CollectionObservableTest, :observer_tests => [observer1, observer2])}
   let(:polymorphic_observable) {create_model(PolymorphicHasManyObservableTest, :observer => observer2)}
+  before(:all) do
+    puts $queue_engine
+    AssociationObservers::queue.engine = $queue_engine unless $queue_engine.nil?
+  end
+  after(:all) do
+    puts "done: #{$queue_engine}"
+    unless $queue_engine.nil?
+      AssociationObservers::queue.finalize_engine
+      $queue_engine = nil
+    end
+  end
   before do
     observer1.belongs_to_observable_test = belongs_to_observable
     observer1.save

@@ -39,6 +39,10 @@ module AssociationObservers
       end
     end
 
+    def engine
+      AssociationObservers::options[:queue][:engine]
+    end
+
     def engine=(engine)
       AssociationObservers::options[:queue][:engine] = engine
       initialize_queue_engine
@@ -54,6 +58,12 @@ module AssociationObservers
       #
       #end
       require "association_observers/extensions/#{engine}"
+      load_engine
+    end
+
+    def finalize_engine
+      unload_engine
+      AssociationObservers::options[:queue][:engine] = nil
     end
 
     private
@@ -65,6 +75,14 @@ module AssociationObservers
     def enqueue(task, *args)
       t = task.new(*args)
       t.perform
+    end
+
+    def load_engine
+      send("load_#{engine}_engine") unless engine.nil?
+    end
+
+    def unload_engine
+      send("unload_#{engine}_engine") unless engine.nil?
     end
 
   end
