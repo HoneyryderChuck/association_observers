@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 require "spec_helper"
-require "observer_example_spec"
+require "helpers/observer_example_spec"
 require "helpers/active_record_helper"
 require "helpers/delayed_job_helper"
 require "helpers/resque_helper"
