@@ -1,14 +1,6 @@
 # -*- encoding : utf-8 -*-
 module AssociationObservers
   module DataMapper
-    #module Orm
-    #  autoload :DataMapper, "association_observers/orm/data_mapper"
-    #end
-    #
-    #def self.orm_adapter
-    #  @orm_adapter ||= Orm::DataMapper
-    #end
-
     module IsObservableMethods
       def self.extended(model)
         model.extend(ClassMethods)

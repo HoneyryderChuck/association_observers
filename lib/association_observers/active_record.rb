@@ -1,14 +1,6 @@
 # -*- encoding : utf-8 -*-
 module AssociationObservers
   module ActiveRecord
-    #module Orm
-    #  autoload :ActiveRecord, "association_observers/orm/active_record"
-    #end
-    #
-    #def self.orm_adapter
-    #  @orm_adapter ||= Orm::ActiveRecord
-    #end
-
     # translation of AR callbacks to collection callbacks; we want to ignore the update on collections because neither
     # add nor remove shall be considered an update event in the observables
     # @example
