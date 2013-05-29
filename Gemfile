@@ -6,24 +6,18 @@ group :development do
 end
 
 group :test do
-  gem "delayed_job_active_record", :require => false
-  gem "resque",                    :require => false
-  gem "sidekiq",                   :require => false unless RUBY_VERSION == "1.8.7"
+  #gem "delayed_job_data_mapper",                          :require => false
+  gem "delayed_job_active_record",                        :require => false
+  gem "resque",                                           :require => false
+  gem "sidekiq",                                          :require => false unless RUBY_VERSION == "1.8.7"
 end
-
-#gem 'activerecord'
-#gem 'datamapper'
-#gem 'dm-mysql-adapter'
 
 platforms :ruby do
-  #gem 'activerecord_sqlite3_adapter'
-
+  gem "sqlite3"
 end
-
 
 platforms :jruby do
   gem 'jruby-openssl'
   gem 'activerecord-jdbc-adapter'
   gem 'activerecord-jdbcsqlite3-adapter'
-  gem 'jdbc-mysql'
 end

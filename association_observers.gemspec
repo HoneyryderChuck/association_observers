@@ -32,7 +32,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency("pry-doc")
   gem.add_development_dependency("awesome_print")
   gem.add_development_dependency("activerecord")
-  gem.add_development_dependency("sqlite3")
   gem.add_development_dependency("datamapper")
   gem.add_development_dependency("dm-sqlite-adapter")
 
