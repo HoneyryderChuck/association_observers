@@ -2,6 +2,9 @@
 require "spec_helper"
 require "observer_example_spec"
 require "helpers/datamapper_helper"
+#require "helpers/delayed_job_helper"
+require "helpers/resque_helper"
+require "helpers/sidekiq_helper"
 
 
 describe AssociationObservers do
@@ -202,26 +205,37 @@ describe AssociationObservers do
 
 
 
-
-  it_should_behave_like "example using observers" do
-    describe "when the belongs to association gets banged" do
-      before(:each) do
-        debugger
-        belongs_to_observable.bang
-      end
-      it "should update its observer" do
-        observer1.reload.should be_updated
-        observer1.should_not be_deleted
-      end
+  shared_examples_for "DataMapper" do
+    it_should_behave_like "example using observers" do
+      #describe "when the belongs to association gets banged" do
+      #  before(:each) do
+      #    belongs_to_observable.bang
+      #  end
+      #  it "should update its observer" do
+      #    observer1.reload.should be_updated
+      #    observer1.should_not be_deleted
+      #  end
+      #end
     end
   end
 
+  it_should_behave_like "DataMapper"
 
-  describe "specific datamapper observers" do
-    let(:observer1) {create_model(ObserverTest) }
-    let(:belongs_to_observable) { create_model(BelongsToObservableTest, :observer_test => observer1)}
-
+  # TODO: as soon as delayed_job_data_mapper gem is updated for delayed-job 3, unpend this
+  pending "delayed_job" do
+    it_should_behave_like "DataMapper" do
+      before(:all) { @queue_engine = :delayed_job }
+    end
   end
-
+  describe "resque" do
+    it_should_behave_like "DataMapper" do
+      before(:all) { @queue_engine = :resque }
+    end
+  end
+  describe "sidekiq" do
+    it_should_behave_like "DataMapper" do
+      before(:all) { @queue_engine = :sidekiq }
+    end
+  end
 
 end
