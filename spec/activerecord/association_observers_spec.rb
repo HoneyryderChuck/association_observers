@@ -4,7 +4,7 @@ require "helpers/observer_example_spec"
 require "helpers/active_record_helper"
 require "helpers/delayed_job_helper"
 require "helpers/resque_helper"
-require "helpers/sidekiq_helper"
+require "helpers/sidekiq_helper" unless RUBY_VERSION == "1.8.7"
 
 
 describe AssociationObservers do
@@ -319,11 +319,16 @@ describe AssociationObservers do
       before(:all) { @queue_engine = :resque }
     end
   end
-  describe "sidekiq" do
-    it_should_behave_like "ActiveRecord" do
-      before(:all) { @queue_engine = :sidekiq }
+  unless defined?(Sidekiq)
+    warn "not running sidekiq specs, check whether is compared with ruby #{RUBY_VERSION} version"
+  else
+    describe "sidekiq" do
+      it_should_behave_like "ActiveRecord" do
+        before(:all) { @queue_engine = :sidekiq }
+      end
     end
   end
+
 
 
 end

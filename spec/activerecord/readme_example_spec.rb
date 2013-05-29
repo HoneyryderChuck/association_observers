@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
-require "./spec/helpers/active_record_helper"
-require './spec/spec_helper'
+require 'spec_helper'
+require "helpers/active_record_helper"
 require 'examples/readme_example'
 
 
