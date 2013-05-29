@@ -37,14 +37,13 @@ module AssociationObservers
       # unpimp my worker
       worker_class = AssociationObservers::Workers::ManyDelayedNotification
       worker_class.instance_variable_set("@queue", nil)
-      worker_class.send :undef_method, :initialize
       worker_class.send :alias_method, :initialize, :standard_initialize
       # TODO: how to remove class method perform?
     end
 
     # overwriting of the enqueue method, using the Resque enqueue method already
     def enqueue_with_resque(task, *args)
-      Resque.enqueue(task, *args[0..-2] << Marshal.dump(args.last))
+      ::Resque.enqueue(task, *args[0..-2] << Marshal.dump(args.last))
     end
   end
 end

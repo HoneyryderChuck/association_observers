@@ -32,7 +32,7 @@ module AssociationObservers
 
       # pimp my worker
       worker_class = AssociationObservers::Workers::ManyDelayedNotification
-      worker_class.send :include, Sidekiq::Worker
+      worker_class.send :include, ::Sidekiq::Worker
       worker_class.sidekiq_options :queue => AssociationObservers::options[:queue][:name].to_sym
       worker_class.send :alias_method, :perform_action!, :perform
       worker_class.send :alias_method, :standard_initialize, :initialize

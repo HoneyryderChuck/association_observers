@@ -2,6 +2,9 @@
 require "spec_helper"
 require "observer_example_spec"
 require "helpers/active_record_helper"
+require "helpers/delayed_job_helper"
+require "helpers/resque_helper"
+require "helpers/sidekiq_helper"
 
 
 describe AssociationObservers do
@@ -195,7 +198,7 @@ describe AssociationObservers do
 
   end
 
-  # aux metods
+  # aux methods
   def build_model(klass, attributes={})
     klass.new(attributes)
   end
@@ -219,32 +222,67 @@ describe AssociationObservers do
   end
 
 
-
-  it_should_behave_like "example using observers" do
-    # TODO: fix this for datamapper and pass it to example
-    describe "when the belongs to observable is deleted" do
-      before(:each) do
-        destroy_model(observer1.belongs_to_observable_test)
-      end
-      it "should destroy its observer" do
-        observer1.reload.should be_deleted
-      end
-    end
-
-
-    describe "when an has and belongs to many association" do
-      describe "has been created" do
+  shared_examples_for "ActiveRecord" do
+    it_should_behave_like "example using observers" do
+      # TODO: fix this for datamapper and pass it to example
+      describe "when the belongs to observable is deleted" do
         before(:each) do
-          update_model!(observer1, :updated => false)
-          observer1.habtm_observable_tests.create(:name => "doof")
+          destroy_model(observer1.belongs_to_observable_test)
         end
-        it "should update its observer" do
-          observer1.habtm_observable_tests.first.name.should == "doof"
-          observer1.reload.should be_updated
-          observer1.should_not be_deleted
+        it "should destroy its observer" do
+          observer1.reload.should be_deleted
         end
-        describe "and then updated" do
+      end
+
+
+      describe "when an has and belongs to many association" do
+        describe "has been created" do
           before(:each) do
+            update_model!(observer1, :updated => false)
+            observer1.habtm_observable_tests.create(:name => "doof")
+          end
+          it "should update its observer" do
+            observer1.habtm_observable_tests.first.name.should == "doof"
+            observer1.reload.should be_updated
+            observer1.should_not be_deleted
+          end
+          describe "and then updated" do
+            before(:each) do
+              update_model!(observer1, :updated => false)
+              update_model(observer1.habtm_observable_tests.first, :name => "superdoof")
+            end
+            it "should update its observer" do
+              observer1.habtm_observable_tests.first.name.should == "superdoof"
+              observer1.reload.should be_updated
+              observer1.should_not be_deleted
+            end
+          end
+          describe "and afterwards deleted" do
+            before(:each) do
+              update_model!(observer1, :deleted => false)
+              observer1.habtm_observable_tests.delete(observer1.habtm_observable_tests.first)
+            end
+            it "should update its observer" do
+              observer1.reload.should be_deleted
+            end
+          end
+          describe "and completely replaced" do
+            before(:each) do
+              update_model!(observer1, :updated => false)
+              update_model!(observer1, :deleted => false)
+              observer1.habtm_observable_tests = [HabtmObservableTest.new]
+            end
+            it "should update and delete the observer" do
+              observer1.reload.should be_updated
+              observer1.reload.should be_deleted
+            end
+          end
+
+        end
+        describe "has been linked from an existing assoc" do
+          before(:each) do
+            t = HabtmObservableTest.create(:name => "doof")
+            observer1.habtm_observable_tests << t
             update_model!(observer1, :updated => false)
             update_model(observer1.habtm_observable_tests.first, :name => "superdoof")
           end
@@ -253,52 +291,37 @@ describe AssociationObservers do
             observer1.reload.should be_updated
             observer1.should_not be_deleted
           end
-        end
-        describe "and afterwards deleted" do
-          before(:each) do
-            update_model!(observer1, :deleted => false)
-            observer1.habtm_observable_tests.delete(observer1.habtm_observable_tests.first)
+          describe "and afterwards deleted" do
+            before(:each) do
+              update_model!(observer1, :deleted => false)
+              observer1.habtm_observable_tests.delete(observer1.habtm_observable_tests.first)
+            end
+            it "should update its observer" do
+              observer1.reload.should be_deleted
+            end
           end
-          it "should update its observer" do
-            observer1.reload.should be_deleted
-          end
-        end
-        describe "and completely replaced" do
-          before(:each) do
-            update_model!(observer1, :updated => false)
-            update_model!(observer1, :deleted => false)
-            observer1.habtm_observable_tests = [HabtmObservableTest.new]
-          end
-          it "should update and delete the observer" do
-            observer1.reload.should be_updated
-            observer1.reload.should be_deleted
-          end
-        end
 
+        end
       end
-      describe "has been linked from an existing assoc" do
-        before(:each) do
-          t = HabtmObservableTest.create(:name => "doof")
-          observer1.habtm_observable_tests << t
-          update_model!(observer1, :updated => false)
-          update_model(observer1.habtm_observable_tests.first, :name => "superdoof")
-        end
-        it "should update its observer" do
-          observer1.habtm_observable_tests.first.name.should == "superdoof"
-          observer1.reload.should be_updated
-          observer1.should_not be_deleted
-        end
-        describe "and afterwards deleted" do
-          before(:each) do
-            update_model!(observer1, :deleted => false)
-            observer1.habtm_observable_tests.delete(observer1.habtm_observable_tests.first)
-          end
-          it "should update its observer" do
-            observer1.reload.should be_deleted
-          end
-        end
+    end
+  end
 
-      end
+  it_should_behave_like "ActiveRecord" do
+    before(:all) { @queue_engine = nil }
+  end
+  describe "delayed_job" do
+    it_should_behave_like "ActiveRecord" do
+      before(:all) { @queue_engine = :delayed_job }
+    end
+  end
+  describe "resque" do
+    it_should_behave_like "ActiveRecord" do
+      before(:all) { @queue_engine = :resque }
+    end
+  end
+  describe "sidekiq" do
+    it_should_behave_like "ActiveRecord" do
+      before(:all) { @queue_engine = :sidekiq }
     end
   end
 
