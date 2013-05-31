@@ -65,11 +65,11 @@ module AssociationObservers
     model.extend ClassMethods
     model.send :include, InstanceMethods
     adapter = case
-      when AssociationObservers::Orm.active_record?(model)
-        self.orm_adapter = AssociationObservers::Orm::ActiveRecord
+      when Orm.active_record?(model)
+        self.orm_adapter = Orm::ActiveRecord
         AssociationObservers::ActiveRecord
-      when AssociationObservers::Orm.data_mapper?(model)
-        self.orm_adapter = AssociationObservers::Orm::DataMapper
+      when Orm.data_mapper?(model)
+        self.orm_adapter = Orm::DataMapper
         AssociationObservers::DataMapper
     end
     unless adapter.nil?
@@ -82,14 +82,14 @@ module AssociationObservers
     def self.included(base)
       base.extend(ClassMethods)
       case
-        when AssociationObservers::Orm.active_record?(base)
-          base.extend AssociationObservers::ActiveRecord::IsObserverMethods
-        when AssociationObservers::Orm.data_mapper?(base)
-          base.extend AssociationObservers::DataMapper::IsObserverMethods
+        when Orm.active_record?(base)
+          base.extend ActiveRecord::IsObserverMethods
+        when Orm.data_mapper?(base)
+          base.extend DataMapper::IsObserverMethods
       end
       AssociationObservers::orm_adapter.class_variable_set(base, :observable_options)
       if RUBY_VERSION < "1.9"
-        base.observable_options = AssociationObservers::Backports.hash_select(AssociationObservers::options){|k, v| [:batch_size].include?(k) }
+        base.observable_options = Backports.hash_select(AssociationObservers::options){|k, v| [:batch_size].include?(k) }
       else
         base.observable_options = AssociationObservers::options.select{|k, v| [:batch_size].include?(k) }
       end
@@ -147,10 +147,10 @@ module AssociationObservers
     def self.included(base)
       base.extend(ClassMethods)
       case
-        when AssociationObservers::Orm::active_record?(base)
-          base.extend AssociationObservers::ActiveRecord::IsObservableMethods
-        when AssociationObservers::Orm::data_mapper?(base)
-          base.extend AssociationObservers::DataMapper::IsObservableMethods
+        when Orm::active_record?(base)
+          base.extend ActiveRecord::IsObservableMethods
+        when Orm::data_mapper?(base)
+          base.extend DataMapper::IsObservableMethods
       end
     end
 

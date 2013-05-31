@@ -114,8 +114,8 @@ module AssociationObservers
 
             # bullshit ruby 1.8 can't stringify hashes, arrays, symbols nor strings correctly
             if RUBY_VERSION < "1.9"
-              assoc_options = AssociationObservers::Backports::extended_to_s(a.options)
-              callback_options = AssociationObservers::Backports::extended_to_s(callbacks)
+              assoc_options = Backports::extended_to_s(a.options)
+              callback_options = Backports::extended_to_s(callbacks)
             else
               assoc_options = a.options.to_s
               callback_options = callbacks

@@ -29,7 +29,7 @@ module AssociationObservers
         return if observable.nil?
         notifier = Marshal.load(@notifier)
         method = RUBY_VERSION < "1.9" ?
-            AssociationObservers::Backports::Proc.fake_curry(notifier.method(:conditional_action).to_proc, observable) :
+            Backports::Proc.fake_curry(notifier.method(:conditional_action).to_proc, observable) :
             notifier.method(:conditional_action).to_proc.curry[observable]
         observer_klass = @observer_klass.constantize
         AssociationObservers::orm_adapter.find_all(observer_klass, AssociationObservers::orm_adapter.key(observer_klass) => @observer_ids).each(&method)

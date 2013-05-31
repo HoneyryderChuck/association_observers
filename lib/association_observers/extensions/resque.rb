@@ -12,7 +12,7 @@ module AssociationObservers
       end
 
       # pimp my worker
-      worker_class = AssociationObservers::Workers::ManyDelayedNotification
+      worker_class = Workers::ManyDelayedNotification
       worker_class.instance_variable_set("@queue", AssociationObservers::options[:queue][:name].to_sym)
       worker_class.send :alias_method, :standard_initialize, :initialize
       worker_class.send :define_method, :initialize do |*args|
@@ -35,7 +35,7 @@ module AssociationObservers
       end
 
       # unpimp my worker
-      worker_class = AssociationObservers::Workers::ManyDelayedNotification
+      worker_class = Workers::ManyDelayedNotification
       worker_class.instance_variable_set("@queue", nil)
       worker_class.send :alias_method, :initialize, :standard_initialize
       # TODO: how to remove class method perform?

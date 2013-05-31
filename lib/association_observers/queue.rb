@@ -24,7 +24,7 @@ module AssociationObservers
 
       if notifier.callback.eql?(:destroy)
         method = RUBY_VERSION < "1.9" ?
-            AssociationObservers::Backports::Proc.fake_curry(notifier.method(:conditional_action).to_proc, observable) :
+            Backports::Proc.fake_curry(notifier.method(:conditional_action).to_proc, observable) :
             notifier.method(:conditional_action).to_proc.curry[observable]
         AssociationObservers::orm_adapter.batched_each(observers, batch_size, &method)
       else
