@@ -9,6 +9,9 @@ require "active_support/core_ext/string/inflections"
 
 require 'orm_adapter'
 
+require "association_observers/orm/active_record"
+require "association_observers/orm/data_mapper"
+
 
 # Here it is defined the basic behaviour of how observer/observable model associations are set. There are here three
 # main roles defined: The observer associations, the observable associations, and the notifiers (the real observers).
@@ -62,12 +65,10 @@ module AssociationObservers
     model.extend ClassMethods
     model.send :include, InstanceMethods
     adapter = case
-      when (defined?(::ActiveRecord) and model.eql?(::ActiveRecord::Base))
-        require "association_observers/orm/active_record"
+      when AssociationObservers::Orm.active_record?(model)
         self.orm_adapter = AssociationObservers::Orm::ActiveRecord
         AssociationObservers::ActiveRecord
-      when (defined?(::DataMapper) and model.ancestors.include?((::DataMapper::Resource)))
-        require "association_observers/orm/data_mapper"
+      when AssociationObservers::Orm.data_mapper?(model)
         self.orm_adapter = AssociationObservers::Orm::DataMapper
         AssociationObservers::DataMapper
     end
@@ -81,9 +82,9 @@ module AssociationObservers
     def self.included(base)
       base.extend(ClassMethods)
       case
-        when (defined?(::ActiveRecord) and base < ::ActiveRecord::Base)
+        when AssociationObservers::Orm.active_record?(base)
           base.extend AssociationObservers::ActiveRecord::IsObserverMethods
-        when (defined?(::DataMapper) and base.ancestors.include?(::DataMapper::Resource))
+        when AssociationObservers::Orm.data_mapper?(base)
           base.extend AssociationObservers::DataMapper::IsObserverMethods
       end
       AssociationObservers::orm_adapter.class_variable_set(base, :observable_options)
@@ -146,9 +147,9 @@ module AssociationObservers
     def self.included(base)
       base.extend(ClassMethods)
       case
-        when (defined?(::ActiveRecord) and base < ::ActiveRecord::Base)
+        when AssociationObservers::Orm::active_record?(base)
           base.extend AssociationObservers::ActiveRecord::IsObservableMethods
-        when (defined?(::DataMapper) and base.ancestors.include?(::DataMapper::Resource))
+        when AssociationObservers::Orm::data_mapper?(base)
           base.extend AssociationObservers::DataMapper::IsObservableMethods
       end
     end

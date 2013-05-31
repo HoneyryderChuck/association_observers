@@ -3,6 +3,10 @@ require "association_observers/orm/base"
 
 module AssociationObservers
   module Orm
+    def self.active_record?(klass=nil)
+      defined?(::ActiveRecord) and (klass.nil? or klass < ::ActiveRecord::Base or klass == ::ActiveRecord::Base)
+    end
+
     class ActiveRecord < Base
 
       def self.key(klass)

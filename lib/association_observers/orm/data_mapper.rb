@@ -3,6 +3,10 @@ require "association_observers/orm/base"
 
 module AssociationObservers
   module Orm
+    def self.data_mapper?(klass=nil)
+      defined?(::DataMapper) and (klass.nil? or klass.ancestors.include?((::DataMapper::Resource)))
+    end
+
     class DataMapper < Base
 
       def self.key(klass)
